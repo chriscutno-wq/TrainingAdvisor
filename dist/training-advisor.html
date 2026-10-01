@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Training Advisor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---------- Alkami brand tokens ---------- */
+:root{
+  --navy:#071351; --navy-2:#152E7C; --blue:#0251B3; --blue-2:#1F64C5; --blue-3:#357DE4;
+  --gold:#F3AB39; --gold-2:#F7C94C; --gold-3:#FFF3AB;
+  --teal:#1B9587; --teal-2:#29DBBE; --purple:#692E53; --purple-2:#AE5294;
+  --sky:#50C1EC; --sky-3:#92EAFF;
+
+  --bg:#FAFAFA; --surface:#FFFFFF; --text:#071351; --muted:#4A5271; --border:#DBDBDB; --soft:#EFEFEF;
+  --link:#0251B3; --btn-bg:#0251B3; --btn-text:#FFFFFF; --btn-hover:#1F64C5;
+  --ghost-border:#B9BFD3; --ghost-hover:#EFEFEF;
+  --best-bg:#071351; --best-text:#FFFFFF; --best-muted:rgba(255,255,255,.82);
+  --badge-bg:#EFEFEF; --mark:rgba(146,234,255,.65);
+  --note-bg:#FFF3AB; --note-bar:#F7C94C; --note-text:#071351;
+  --shadow:0 1px 2px rgba(7,19,81,.06),0 6px 18px rgba(7,19,81,.06);
+  --focus:#357DE4;
+  --serif:"Alverata","Cambria","Georgia",serif;
+  --sans:"Nunito Sans","Calibri",system-ui,-apple-system,"Segoe UI",sans-serif;
+
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#071351; --surface:rgba(255,255,255,.06); --text:#FFFFFF; --muted:rgba(255,255,255,.74);
+    --border:rgba(255,255,255,.16); --soft:rgba(255,255,255,.10);
+    --link:#92EAFF; --btn-bg:#1F64C5; --btn-hover:#357DE4;
+    --ghost-border:rgba(255,255,255,.34); --ghost-hover:rgba(255,255,255,.10);
+    --best-bg:#152E7C; --badge-bg:rgba(255,255,255,.12); --mark:rgba(80,193,236,.42);
+    --note-bg:rgba(255,243,171,.12); --note-text:#FFFFFF;
+    --shadow:none; --focus:#92EAFF;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#071351; --surface:rgba(255,255,255,.06); --text:#FFFFFF; --muted:rgba(255,255,255,.74);
+  --border:rgba(255,255,255,.16); --soft:rgba(255,255,255,.10);
+  --link:#92EAFF; --btn-bg:#1F64C5; --btn-hover:#357DE4;
+  --ghost-border:rgba(255,255,255,.34); --ghost-hover:rgba(255,255,255,.10);
+  --best-bg:#152E7C; --badge-bg:rgba(255,255,255,.12); --mark:rgba(80,193,236,.42);
+  --note-bg:rgba(255,243,171,.12); --note-text:#FFFFFF;
+  --shadow:none; --focus:#92EAFF;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{background:#071351;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{overflow-x:hidden;margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--link)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{width:100%;max-width:1000px;margin:0 auto;padding:0 20px}
+
+/* ---------- Hero ---------- */
+.hero{background:var(--navy);color:#fff;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:auto 0 0 0;height:4px;background:linear-gradient(90deg,#F3AB39,#FAD564);opacity:.0}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 0 0;position:relative;z-index:2}
+.logo{display:block;height:30px;width:auto}
+.tag{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sky-3)}
+.hero-body{position:relative;z-index:2;padding:44px 0 34px;max-width:680px}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(34px,6vw,52px);line-height:1.08;margin:0 0 14px;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--gold-2)}
+.lede{margin:0 0 26px;font-size:18px;color:rgba(255,255,255,.88);max-width:560px}
+.glyphs{position:absolute;right:-30px;top:0;bottom:0;width:430px;z-index:1;pointer-events:none}
+@media (max-width:820px){.glyphs{opacity:.45;right:-120px}}
+
+.searchbox{position:relative;display:flex;align-items:center;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.28);max-width:680px}
+.searchbox:focus-within{outline:3px solid var(--sky);outline-offset:3px}
+.searchbox svg.mag{position:absolute;left:18px;width:22px;height:22px;stroke:#071351;fill:none;stroke-width:2;stroke-linecap:round}
+.searchbox input{flex:1;min-width:0;border:0;background:transparent;color:#071351;font-size:18px;padding:19px 52px 19px 52px;border-radius:10px;outline:none}
+.searchbox input::placeholder{color:#59607d}
+.searchbox input::-webkit-search-cancel-button{display:none}
+.clear{position:absolute;right:10px;width:36px;height:36px;border:0;background:transparent;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;color:#071351}
+.clear:hover{background:#EFEFEF}
+.clear.on{display:flex}
+.clear svg{width:16px;height:16px;stroke:#071351;stroke-width:2.2;stroke-linecap:round;fill:none}
+
+.picks{margin-top:18px;max-width:680px}
+.picks-label{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sky-3);margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.08);color:#fff;border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;cursor:pointer;min-height:36px}
+.chip:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.6)}
+.picks + .picks{margin-top:14px}
+
+/* ---------- Toolbar ---------- */
+main{flex:1}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;justify-content:space-between;padding:22px 0 8px}
+.seg{display:inline-flex;background:var(--soft);border-radius:10px;padding:4px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:7px;padding:8px 14px;font-weight:700;font-size:14px;cursor:pointer;color:var(--muted);min-height:38px}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(7,19,81,.18)}
+.seg .n{font-weight:600;opacity:.7;margin-left:4px}
+.sel{min-width:0;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--muted)}
+.sel select{min-width:0;width:100%;appearance:none;-webkit-appearance:none;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23697' fill='none' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--border);border-radius:8px;padding:9px 34px 9px 12px;min-height:40px;max-width:100%;font-weight:600;color:var(--text);cursor:pointer}
+.summary{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;padding:10px 0 14px}
+.summary h2{font-family:var(--serif);font-size:22px;margin:0;line-height:1.2}
+.summary .sub{color:var(--muted);font-size:14px;margin:2px 0 0}
+.btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;border:0;border-radius:8px;padding:10px 16px;min-height:42px;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none;line-height:1.1}
+.btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn.primary{background:var(--btn-bg);color:var(--btn-text)}
+.btn.primary:hover{background:var(--btn-hover)}
+.btn.ghost{background:transparent;border:1px solid var(--ghost-border);color:var(--text)}
+.btn.ghost:hover{background:var(--ghost-hover)}
+.btn.gold{background:var(--gold-2);color:#071351}
+.btn.gold:hover{background:#FFDC6C}
+.btn.sm{padding:8px 12px;min-height:38px;font-size:14px}
+
+/* ---------- Cards ---------- */
+.list{display:grid;gap:14px;padding-bottom:28px}
+.section-label{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:14px 0 -2px}
+.card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px 18px 26px;box-shadow:var(--shadow);overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--blue-3)}
+.card.t-webinar::before{background:var(--teal-2)}
+.card.t-live::before{background:var(--purple-2)}
+.card h3{font-family:var(--serif);font-weight:700;font-size:21px;line-height:1.22;margin:10px 0 6px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:7px;background:var(--badge-bg);color:var(--text);font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px 4px 8px;border-radius:999px}
+.badge i{display:block;width:10px;height:10px;background:var(--blue-3)}
+.t-webinar .badge i{background:var(--teal-2);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.t-live .badge i{background:var(--purple-2);transform:rotate(45deg) scale(.8)}
+.dur{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--text)}
+.dur svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.dot{opacity:.5}
+.desc{margin:6px 0 0;color:var(--text);font-size:15.5px;white-space:pre-line}
+.desc p{margin:0 0 8px}
+.clamp .desc{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.more{border:0;background:none;color:var(--link);font-weight:700;font-size:14px;padding:4px 0;cursor:pointer;margin-top:2px}
+.more:hover{text-decoration:underline}
+.note{margin-top:10px;background:var(--note-bg);border-left:4px solid var(--note-bar);border-radius:6px;padding:9px 12px;font-size:14px;color:var(--note-text)}
+.note b{font-weight:800}
+.why{margin-top:10px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.why .k{font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+.why span.m{background:var(--soft);border-radius:999px;padding:2px 9px;font-weight:700;color:var(--text)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 1px}
+
+.card.best{background:var(--best-bg);color:var(--best-text);border-color:transparent;padding:24px 24px 22px 30px}
+.card.best::before{width:8px;background:linear-gradient(180deg,#F3AB39,#FAD564)}
+.card.best h3{font-size:26px;color:#fff;margin-top:12px}
+.card.best .desc{color:var(--best-muted)}
+.card.best .meta,.card.best .why{color:var(--best-muted)}
+.card.best .badge{background:rgba(255,255,255,.14);color:#fff}
+.card.best .dur{color:#fff}
+.card.best .why span.m{background:rgba(255,255,255,.14);color:#fff}
+.card.best .more{color:var(--sky-3)}
+.card.best .btn.ghost{border-color:rgba(255,255,255,.45);color:#fff}
+.card.best .btn.ghost:hover{background:rgba(255,255,255,.12)}
+.card.best mark{background:transparent;box-shadow:inset 0 -2px 0 #F7C94C;border-radius:0}
+.card.best .note{color:#071351;background:var(--gold-3)}
+.ribbon{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(90deg,#F3AB39,#FAD564);color:#071351;font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:4px}
+
+.moreBtn{justify-self:center;margin-top:4px}
+.weak{background:var(--note-bg);border-left:4px solid var(--note-bar);color:var(--note-text);padding:11px 14px;border-radius:8px;font-size:15px;margin-bottom:2px}
+.miss{font-size:14px;color:var(--muted);margin:0 0 4px}
+
+/* ---------- Empty / browse ---------- */
+.empty{text-align:center;padding:40px 16px 56px;color:var(--muted)}
+.empty h2{font-family:var(--serif);color:var(--text);font-size:24px;margin:0 0 8px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;padding:6px 0 36px}
+.tile{position:relative;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 18px 16px;cursor:pointer;min-height:104px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
+.tile:hover{border-color:var(--blue-3);transform:translateY(-1px)}
+.tile .g{position:absolute;right:0;top:0;width:58px;height:58px}
+.tile b{font-family:var(--serif);font-size:18px;line-height:1.2;padding-right:44px}
+.tile span{font-size:13px;color:var(--muted);font-weight:600}
+.h2s{font-family:var(--serif);font-size:22px;margin:26px 0 4px}
+
+/* ---------- Footer ---------- */
+footer{background:var(--navy);color:rgba(255,255,255,.78);margin-top:auto}
+.foot{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding:22px 0 24px;font-size:13px}
+.foot .logo{height:22px}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:#071351;color:#fff;border:1px solid rgba(255,255,255,.3);padding:11px 18px;border-radius:8px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .hero-body{padding:30px 0 26px}
+  .lede{font-size:16px}
+  .searchbox input{font-size:16px;padding:17px 46px 17px 48px}
+  .searchbox svg.mag{left:15px}
+  .card{padding:18px 16px 16px 22px}
+  .card.best{padding:20px 16px 18px 24px}
+  .card h3{font-size:19px}
+  .card.best h3{font-size:22px}
+  .actions .btn{flex:1 1 auto}
+  .seg{width:100%}
+  .seg button{flex:1 1 auto;padding:8px 8px}
+  .sel{width:100%}
+  .sel select{flex:1;text-overflow:ellipsis}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <svg class="glyphs" viewBox="0 0 430 420" preserveAspectRatio="xMaxYMid slice" aria-hidden="true" focusable="false">
+    <g>
+      <rect x="170" y="0" width="260" height="420" fill="#152E7C"/>
+      <path d="M170 0 L300 130 L170 130Z" fill="#1F64C5" opacity=".55"/>
+      <g fill="#0251B3">
+        <path d="M300 20 L360 80 L240 80Z"/><path d="M300 80 L360 140 L240 140Z"/>
+        <path d="M300 140 L360 200 L240 200Z"/><path d="M300 200 L360 260 L240 260Z"/>
+      </g>
+      <path d="M430 230 A130 130 0 0 0 300 360 L430 360Z" fill="#1F64C5" opacity=".75"/>
+      <rect x="360" y="300" width="70" height="60" fill="#357DE4" opacity=".6"/>
+      <rect x="370" y="380" width="60" height="40" fill="#F3AB39"/>
+    </g>
+  </svg>
+  <div class="wrap">
+    <div class="topbar">
+      <svg class="logo" viewBox="571.46 258.47 204.19 61.42" role="img" aria-label="Alkami">
+        <defs><linearGradient id="gA" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#F3AB39"/><stop offset="1" stop-color="#FAD564"/></linearGradient></defs>
+        <path d="M 591.714844 261.019531 L 571.460938 319.890625 L 622.679688 300.582031 L 622.679688 319.308594 L 631.421875 319.308594 L 631.421875 261.019531 L 622.679688 261.019531 L 622.679688 298.46875 L 612.695312 299.488281 L 599.800781 258.472656 Z M 598.636719 262.40625 L 597.324219 273.84375 L 603.734375 300.730469 L 588.800781 302.476562 L 583.042969 312.167969 Z M 764.871094 266.265625 C 764.871094 269.328125 767.128906 271.511719 770.261719 271.511719 C 773.394531 271.511719 775.652344 269.328125 775.652344 266.265625 C 775.652344 263.207031 773.394531 261.019531 770.261719 261.019531 C 767.128906 261.019531 764.871094 263.207031 764.871094 266.265625 M 637.539062 261.019531 L 637.539062 319.308594 L 646.285156 319.308594 L 646.285156 297.085938 L 661.730469 319.308594 L 671.933594 319.308594 L 655.757812 297.085938 L 671.496094 278.507812 L 661.292969 278.507812 L 646.285156 297.085938 L 646.285156 261.019531 Z M 737.546875 283.679688 C 735.726562 280.109375 731.71875 277.925781 728.003906 277.925781 C 722.246094 277.925781 719.113281 280.765625 717.804688 283.242188 L 717.511719 283.242188 L 717.511719 278.507812 L 708.769531 278.507812 L 708.769531 319.308594 L 717.511719 319.308594 L 717.511719 290.234375 C 719.042969 287.613281 722.027344 285.5 725.089844 285.5 C 728.585938 285.5 729.898438 287.976562 729.898438 290.894531 L 729.898438 319.308594 L 738.640625 319.308594 L 738.640625 290.234375 C 740.171875 287.613281 742.722656 285.5 746.21875 285.5 C 749.714844 285.5 751.027344 287.976562 751.027344 290.894531 L 751.027344 319.308594 L 759.769531 319.308594 L 759.769531 290.894531 C 759.769531 281.492188 753.503906 277.925781 748.402344 277.925781 C 743.449219 277.925781 739.804688 280.621094 737.546875 283.679688 M 674.304688 282.730469 L 674.304688 290.019531 C 676.347656 287.90625 681.15625 285.0625 685.964844 285.0625 C 691.5 285.0625 693.90625 287.46875 693.90625 291.984375 L 693.90625 294.535156 C 679.40625 294.535156 670.882812 299.925781 670.882812 308.304688 C 670.882812 314.425781 675.761719 319.890625 682.539062 319.890625 C 688.222656 319.890625 692.449219 316.175781 693.613281 314.570312 L 693.90625 314.570312 L 693.90625 319.308594 L 702.648438 319.308594 L 702.648438 291.476562 C 702.503906 282.003906 696.019531 277.925781 687.855469 277.925781 C 682.464844 277.925781 677.21875 279.964844 674.304688 282.730469 M 679.480469 307.652344 C 679.480469 303.789062 682.464844 300.730469 693.90625 300.730469 L 693.90625 308.378906 C 692.449219 310.421875 688.003906 312.675781 684.945312 312.675781 C 681.882812 312.675781 679.480469 310.566406 679.480469 307.652344 M 765.890625 319.308594 L 774.632812 319.308594 L 774.632812 278.503906 L 765.890625 278.503906 Z M 606.285156 309.035156 L 608.90625 319.308594 L 618.453125 319.308594 L 614.007812 304.589844 Z M 606.285156 309.035156" fill="url(#gA)" fill-rule="nonzero"/>
+      </svg>
+      <span class="tag">Training Advisor</span>
+    </div>
+    <div class="hero-body">
+      <h1>Find the right training. <em>Fast.</em></h1>
+      <p class="lede">Type what your client is stuck on. Get the course, webinar or live session that covers it.</p>
+      <div class="searchbox" role="search">
+        <svg class="mag" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+        <label class="sr" for="q">Describe the training need or issue</label>
+        <input id="q" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="e.g. client can’t reset their password">
+        <button class="clear" id="clear" type="button" aria-label="Clear search"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+      </div>
+      <div class="picks">
+        <p class="picks-label">Common asks</p>
+        <div class="chips" id="picks"></div>
+      </div>
+      <div class="picks" id="recentWrap" hidden>
+        <p class="picks-label">Recent searches</p>
+        <div class="chips" id="recent"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="toolbar" id="toolbar">
+      <div class="seg" id="typeSeg" role="group" aria-label="Filter by format"></div>
+      <label class="sel">Category
+        <select id="cat" aria-label="Filter by category"></select>
+      </label>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div id="results" aria-live="polite"></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <svg class="logo" viewBox="571.46 258.47 204.19 61.42" role="img" aria-label="Alkami">
+      <defs><linearGradient id="gB" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#F3AB39"/><stop offset="1" stop-color="#FAD564"/></linearGradient></defs>
+      <path d="M 591.714844 261.019531 L 571.460938 319.890625 L 622.679688 300.582031 L 622.679688 319.308594 L 631.421875 319.308594 L 631.421875 261.019531 L 622.679688 261.019531 L 622.679688 298.46875 L 612.695312 299.488281 L 599.800781 258.472656 Z M 598.636719 262.40625 L 597.324219 273.84375 L 603.734375 300.730469 L 588.800781 302.476562 L 583.042969 312.167969 Z M 764.871094 266.265625 C 764.871094 269.328125 767.128906 271.511719 770.261719 271.511719 C 773.394531 271.511719 775.652344 269.328125 775.652344 266.265625 C 775.652344 263.207031 773.394531 261.019531 770.261719 261.019531 C 767.128906 261.019531 764.871094 263.207031 764.871094 266.265625 M 637.539062 261.019531 L 637.539062 319.308594 L 646.285156 319.308594 L 646.285156 297.085938 L 661.730469 319.308594 L 671.933594 319.308594 L 655.757812 297.085938 L 671.496094 278.507812 L 661.292969 278.507812 L 646.285156 297.085938 L 646.285156 261.019531 Z M 737.546875 283.679688 C 735.726562 280.109375 731.71875 277.925781 728.003906 277.925781 C 722.246094 277.925781 719.113281 280.765625 717.804688 283.242188 L 717.511719 283.242188 L 717.511719 278.507812 L 708.769531 278.507812 L 708.769531 319.308594 L 717.511719 319.308594 L 717.511719 290.234375 C 719.042969 287.613281 722.027344 285.5 725.089844 285.5 C 728.585938 285.5 729.898438 287.976562 729.898438 290.894531 L 729.898438 319.308594 L 738.640625 319.308594 L 738.640625 290.234375 C 740.171875 287.613281 742.722656 285.5 746.21875 285.5 C 749.714844 285.5 751.027344 287.976562 751.027344 290.894531 L 751.027344 319.308594 L 759.769531 319.308594 L 759.769531 290.894531 C 759.769531 281.492188 753.503906 277.925781 748.402344 277.925781 C 743.449219 277.925781 739.804688 280.621094 737.546875 283.679688 M 674.304688 282.730469 L 674.304688 290.019531 C 676.347656 287.90625 681.15625 285.0625 685.964844 285.0625 C 691.5 285.0625 693.90625 287.46875 693.90625 291.984375 L 693.90625 294.535156 C 679.40625 294.535156 670.882812 299.925781 670.882812 308.304688 C 670.882812 314.425781 675.761719 319.890625 682.539062 319.890625 C 688.222656 319.890625 692.449219 316.175781 693.613281 314.570312 L 693.90625 314.570312 L 693.90625 319.308594 L 702.648438 319.308594 L 702.648438 291.476562 C 702.503906 282.003906 696.019531 277.925781 687.855469 277.925781 C 682.464844 277.925781 677.21875 279.964844 674.304688 282.730469 M 679.480469 307.652344 C 679.480469 303.789062 682.464844 300.730469 693.90625 300.730469 L 693.90625 308.378906 C 692.449219 310.421875 688.003906 312.675781 684.945312 312.675781 C 681.882812 312.675781 679.480469 310.566406 679.480469 307.652344 M 765.890625 319.308594 L 774.632812 319.308594 L 774.632812 278.503906 L 765.890625 278.503906 Z M 606.285156 309.035156 L 608.90625 319.308594 L 618.453125 319.308594 L 614.007812 304.589844 Z M 606.285156 309.035156" fill="url(#gB)" fill-rule="nonzero"/>
+    </svg>
+    <span id="footNote"></span>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+var DATA = [{"id":0,"title":"Card Management: Account Maintenance and Self-Service Features","type":"Course","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/bf33a584-4f90-473f-ab98-b0f16e16b394","desc":["Learn how to help end users keep and maintain their debit and credit card accounts by utilizing the self-service features available."],"notes":["Card Management is an optional product. Contact your Client Success Manager for more information."],"dur":null,"titleOnly":false},{"id":1,"title":"Card Management: How to Setup and Activate Alerts/Controls","type":"Course","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/9900f3b9-07b4-40c4-b755-ed60a9c4f511","desc":["Learn how to help end users register, activate, and set up alerts and controls for their debit and credit card accounts."],"notes":["Card Management is an optional product. Contact your CSM for more information."],"dur":null,"titleOnly":false},{"id":2,"title":"Credit Score: Products & Features","type":"Course","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/39e9f3e3-b236-4bd4-8ab2-8be9f601ab11","desc":["Alkami offers rich credit reporting and credit management solutions with end user score monitoring, credit factors, credit utilization, and educational material. These solutions provide your end users with powerful credit monitoring resources to assist them in their financial wellness journey. This course explores both SavvyMoney and FICO Score."],"notes":[],"dur":null,"titleOnly":false},{"id":3,"title":"Overview of the Financial Wellness Widget With TDE","type":"Course","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/1a14f9dc-c168-4015-a531-de8c701a6e0c","desc":["Digital financial wellness solutions are evolving fast. Alkami's Financial Wellness widget provides your end users with a singular, trusted landing spot to review and manage their spending, saving, borrowing, and financial planning activities within online banking. In this course, you will learn about the features and functionality of the Financial Wellness widget."],"notes":[],"dur":null,"titleOnly":false},{"id":4,"title":"Transaction Data Enrichment (TDE)","type":"Course","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/f7ade3ce-dc95-4f98-9cfd-c6042651afab","desc":["Transaction Data Enrichment (TDE) auto-categorization and description cleansing turns ambiguous transaction information into clear, contextualized data. This allows your FI to extract deep insights into end user needs and behaviors, enabling your FI to improve the end user journey and drive more meaningful experiences."],"notes":[],"dur":null,"titleOnly":false},{"id":5,"title":"Account Management, Protection, & Shared Access","type":"Course","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/20eb6926-0762-4c2f-8d0c-281ef34383fa","desc":["The Alkami Platform includes in-demand features to help end users manage, protect, and share access to their accounts. Payroll Distribution enables end user to conveniently manage how their payroll deposits are distributed among their accounts. Transaction Disputes allows end user to report fraudulent transactions to your FI, which you can then investigate and take appropriate action on. The Shared Access feature allows consumer end users to share customized access to specified accounts with other consumer end users."],"notes":[],"dur":null,"titleOnly":false},{"id":6,"title":"Introduction to the Accounts Widget","type":"Course","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/f8b29866-15f1-4dcd-bb89-37cdbc39cfee","desc":["Innovative technology is proactively guiding users to achieve greater financial health. The Alkami Platform's Accounts widget allows end users to view account details, transaction history, and analytics about their accounts to help them reach their financial goals. In this course, you will learn about account types and account type classes, the end user experience of the Accounts widget, the Snapshot feature on Mobile, and more!"],"notes":[],"dur":null,"titleOnly":false},{"id":7,"title":"Account Aggregation","type":"Course","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/16bb8f4d-696e-4126-a18d-b0c7569186c3","desc":["With Account Aggregation, end users can add, or aggregate, accounts they have with external financial institutions to your digital banking solution. The Account Aggregation feature allows your FI to gain insights about end users’ external financial holdings to better position your institution as their primary FI and to enable targeted marketing opportunities."],"notes":[],"dur":null,"titleOnly":false},{"id":8,"title":"Utilizing the Financial Health Survey Tool","type":"Course","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/365a4558-f8da-49a1-a6cb-07128848afbd","desc":["This resource is designed to help you learn about the financial health survey feature. In this short module you will get a general overview of what the feature is, how you can use it to benefit your FI and users, and what aspects of the survey you can customize according to your needs. You will also learn how to send the survey to your users, and how you can resend the survey if needed. Additionally, you will discover how you can use the marketing feature to target and run reports based on the financial health scores of your users."],"notes":[],"dur":null,"titleOnly":false},{"id":9,"title":"Easy Navigation of the Spending Tab","type":"Webinar","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/34483d17-10dc-4082-bcdd-120be5f08fd4","desc":["Your FI Admin will enjoy an overview of the functionality of the Spending Tab, how TDE works on the Spending Tab in place of a budget and various options the end user has for updating accounts and transactions on the Spending Tab to get an overview of their finances from a month through a year overview."],"notes":[],"dur":null,"titleOnly":false},{"id":10,"title":"Exploring Transaction Data Enrichment","type":"Webinar","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/9f51fa35-2212-46c6-9b5b-1b726d212cfa","desc":["This session gives your FI Admin an in depth walk through of how TDE works and what the benefit of Transaction Data Enrichment is for the end user."],"notes":[],"dur":null,"titleOnly":false},{"id":11,"title":"Optimizing Credit Health with the SavvyMoney Credit Score Widget","type":"Webinar","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/d532e3cd-69df-4047-ad66-6bca915efd74","desc":["This 1 hour instructor-led course will teach you how to use the Savvy Money Credit Score widget, allowing you to see how End Users can model loans and purchases to see what effect they may have on their credit score. You will also navigate and understand the various resources and financial wellness tools built into the widget to help End Users make the best decisions to build a healthy credit score."],"notes":[],"dur":"1 hour","titleOnly":false},{"id":12,"title":"How an End User Opens a New Account in Online Banking Using the Quick Apply Widget","type":"Webinar","cats":["Financial Wellness","Account Opening"],"url":"https://au.myabsorb.com/#/online-courses/9749fac5-779d-43bf-be2f-cc04303af22e","desc":["In this 30-minute session, you will walk through the end user experience of opening an account; talking about the various products and categories available to the end user. We will show a full workflow of Quick Apply and all the spots where an SSO experience may be integrated."],"notes":[],"dur":"30 min","titleOnly":false},{"id":13,"title":"Digital Account Opening Dashboard Overview: View, Edit, & Process Loan Applications","type":"Webinar","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/5e3fc464-a685-4b41-924d-da2015b0a8f7","desc":["The DAO Dashboard is a digital account opening platform that evaluates the identity and credit risk of consumers and also streamlines storing files and leaving notes. FI admin users can use the DAO Dashboard to view and process applications submitted, edit application data as needed, and communicate on orders."],"notes":[],"dur":null,"titleOnly":false},{"id":14,"title":"Digital Account Opening (DAO): Customer Experience Features","type":"Webinar","cats":["Financial Wellness"],"url":"https://au.myabsorb.com/#/online-courses/aad57a7a-e7da-4974-a148-bbec5481a9aa","desc":["This course provides essential information about Alkami's Digital Banking Platform and the DAO Customer Experience features. Learn more about the product's enhancements, stepwise navigation instructions, and workflow processes."],"notes":[],"dur":null,"titleOnly":false},{"id":15,"title":"Quick Apply: Admin Set-Up and End User Application Workflow","type":"Course","cats":["Account Opening"],"url":"https://au.myabsorb.com/#/online-courses/c357b86a-ffcf-4002-badc-522d647c02b8","desc":["The Quick Apply tab is a single source for all product acquisition interfaces in the Alkami Platform. In this course, we'll learn how to configure application fields, manage Account Type Groups, manage submitted applications, and view relevant reports in the FI Admin Platform. We'll also learn how to assist end users as they complete applications using the Quick Apply tab."],"notes":[],"dur":null,"titleOnly":false},{"id":16,"title":"Quick Apply: Category and Product Management","type":"Course","cats":["Account Opening"],"url":"https://au.myabsorb.com/#/online-courses/2e714b0b-e6b2-43d3-89bb-8970ca8c0545","desc":["The Quick Apply tab is a single source for all product acquisition interfaces in the Alkami Platform, allowing end users to seamlessly apply for loans, open new accounts, and purchase additional products such as credit cards and insurance. In this course, we'll learn how to set up and customize the Quick Apply tab, including adding and managing Category Groups, Categories, and Products within the FI Admin Platform."],"notes":[],"dur":null,"titleOnly":false},{"id":17,"title":"Auto Billing Operations","type":"Course","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/c39722b9-bf29-4105-9c30-58c6910b2c08","desc":["This course will teach you how to operate the auto billing system for your business customers. You’ll learn how to identify FI billing systems and methods, manage billing events, manage price lists, generate and view billing files, and download billing reports."],"notes":["Auto Billing is an optional product and is available on all cores."],"dur":null,"titleOnly":false},{"id":18,"title":"Business ACH Essentials: Roles, Settings, Templates, and Payees","type":"Course","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/023b5970-83ab-47d0-8393-a010bddafa78","desc":["In this course, you’ll gain an understanding of the ACH system and the roles of different participants. You’ll also learn how to adjust settings in the FI Admin Platform to enable the Business ACH widget for business users. Finally, you’ll learn how to assist business users as they create, edit, and delete ACH templates and payees."],"notes":[],"dur":null,"titleOnly":false},{"id":19,"title":"Business Admin Features: Sub Users, Roles, Payees, and Payments","type":"Course","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/ed26e6e0-2080-4d10-b4e1-96364661872e","desc":["Discover how to manage sub users, roles, payees, payment methods, and payment requests in this course."],"notes":[],"dur":null,"titleOnly":false},{"id":20,"title":"Business Reports Essentials: How to Access, Create, and Edit Reports","type":"Course","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/9e8a6f43-af65-41fa-aae0-ed18975690bf","desc":["This course will teach you the fundamentals of managing business reports for your business customers. You’ll learn how to print and export reports, filter and customize reports, analyze reports, access Standard Reports, and create, edit, and delete Custom Reports. You’ll also learn how to assist business users as they complete tasks in the Business Reports widget."],"notes":["The Business Reports widget is an add-on product."],"dur":null,"titleOnly":false},{"id":21,"title":"Business Wire Transfers Essentials: How to Customize, Process, and Support Wire Transfers","type":"Course","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/42d1c9e8-eb3e-4135-8c47-4a3d0fcf39e1","desc":["This course will teach you how to manage wire transfers for your business customers. You'll learn how to customize and configure business wire transfer settings, process wire transfer requests submitted by business users, and assist business users as they manage payees and payment methods."],"notes":[],"dur":null,"titleOnly":false},{"id":22,"title":"Supporting Business End Users: Registration, Alerts, and Profile Options","type":"Course","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/a6ae4263-cb92-47b1-ad97-455e7c3a464a","desc":["Learn how to register and support business users, manage alerts, and user exclusive profile features in this course."],"notes":[],"dur":null,"titleOnly":false},{"id":23,"title":"Supporting Business Users with ACH Transactions and Requests","type":"Course","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-course-player/5d821c5e-9656-4513-9cc2-83c6cb6d0f80","desc":["This course will teach you how to manage ACH transactions for your business customers. You'll learn how to set Risk Scoring configuration parameters, process ACH requests submitted by business users, and assist business users as they complete tasks in the Business ACH widget."],"notes":[],"dur":null,"titleOnly":false},{"id":24,"title":"Using the Business Overrides","type":"Course","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/9e4ad748-657a-4f57-a201-511f1209decf","desc":["Learn how to override package settings in the Business Info and Features & Access sections of the User Profile. In addition, this learning resource will teach you how to access the business overrides on the user profile, its purpose, and use cases with examples. Lastly, you will learn about options for configuring packages via business override."],"notes":[],"dur":null,"titleOnly":false},{"id":25,"title":"Authorizing Transactions with the Business Admin Widget Authorization Tab","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/8606779f-347d-4bb0-b466-48535b29c972","desc":["In this 30-minute session, you'll explore how to authorize subusers' transactions across all money movement options within the platform, including ACH, wires, and both internal and external transfers. You'll also learn which users have access to the Authorization Tab, who can authorize transactions, and how alerts are triggered by rejections or authorizations. Additionally, you'll understand what causes transactions to expire."],"notes":[],"dur":"30 min","titleOnly":false},{"id":26,"title":"Building Business Banking Packages","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/b34bedd4-4732-47c8-af14-436017f7f2b5","desc":["In this 60-minute session, you’ll learn how to create and manage business banking packages tailored to small, mid-market, and commercial clients. You’ll understand how to automatically assign the correct package to the right business users based on predefined rules and handle package deletions efficiently."],"notes":[],"dur":"60 min","titleOnly":false},{"id":27,"title":"Configuring Setup and Overrides for the Master User in the Admin Console","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/73c5ab74-ef4a-4bdc-84cc-52a62131ca3a","desc":["In this 35-minute session, you'll learn how to configure specific functionality and apply overrides on the Business User's customer profile in the Admin Console. You'll explore how to add ACH transaction types, set up additional payment companies, and manage key overrides like billing type, package widget permissions, and business limits."],"notes":[],"dur":"35 min","titleOnly":false},{"id":28,"title":"Creating and Modifying Payees with the Business Admin Widget Payee Tab","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/cf64f960-ee93-4a1c-b87e-882afeb2ca8d","desc":["In this 20-minute session, you'll learn how to create and manage payees used for Business ACH and wire transactions. Youll explore how to easily add new payees and modify existing payee details to ensure smooth business transactions."],"notes":[],"dur":"20 min","titleOnly":false},{"id":29,"title":"Managing Subusers with the Business Admin Widget User Tab","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/3bfc1330-d5b7-4ceb-ba1c-8156e86dbc1e","desc":["In this 45-minute session, you'll earn how to create a new business subuser from scratch or by copying an existing subuser and making updates. You'll also explore how to modify subuser permissions, authorizations, and transaction limits to ensure proper access and functionality."],"notes":[],"dur":"45 min","titleOnly":false},{"id":30,"title":"Mastering Business ACH Submissions","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/742a616c-6149-4214-b499-55d12ae6865d","desc":["In this 30-minute session, you'll explore the different submission options available for Business ACH, including templates, pass-thrus, and Quick ACH. You'll also learn how to send various ACH batches through the system and navigate the Scheduled and History tabs. Additionally, you'll get a brief overview of the Over Limit Request options for business users."],"notes":[],"dur":"30 min","titleOnly":false},{"id":31,"title":"Navigating and Managing the Business Wires Tab","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/d28dd857-fc5d-48a5-8bbe-cbc00f4771e2","desc":["In this 30-minute session, you'll learn how to navigate the three subtabs within the Business Wires widget. You'll explore how to send wire transactions efficiently and how to add or update payee information using the provided hyperlinks."],"notes":[],"dur":"30 min","titleOnly":false},{"id":32,"title":"Navigating Business Reports for the End User","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/58e87137-4462-4c6b-ae4f-e478f03eff3c","desc":["In this 30-minute session, you'll explore the Business Reports Dashboard and its functionality. You'll also learn how to generate the Daily Reconciliation Report and guide businesses in creating and modifying custom reports to suite their specific needs."],"notes":[],"dur":"30 min","titleOnly":false},{"id":33,"title":"Reconciling Business ACH Batches in the Admin Console","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/a0e125de-f3cc-4818-b5d0-2817a9c119cb","desc":["In this 20-minute session, you'll learn how to process Business ACH batches in the Admin Console and follow steps to create a NACHA-formatted Fed file. You'll also explore the Business ACH settings to ensure a smooth reconciliation process for financial institutions."],"notes":[],"dur":"20 min","titleOnly":false},{"id":34,"title":"Reconciling Business Wire Transactions in the Admin Console","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/d6680a24-325f-475a-a482-e6e73fd51e36","desc":["In this 20-minute session, you'll learn how financial institutions process wire requests and create Fedwire-formatted files. You'll also explore the business wire reconciliation features in the Admin console to ensure accurate and timely wire processing."],"notes":[],"dur":"20 min","titleOnly":false},{"id":35,"title":"Business Limit Management Setup in the Admin Console","type":"Webinar","cats":["Commercial Banking"],"url":"https://au.myabsorb.com/#/online-courses/1952946a-31d5-457a-b8d8-9a633997b611","desc":["In this 35-minute session, you will gain practical skills to streamline and automate limit management for business wires, ACH transactions, and message centers. This session will show you how to manage and update staff admin roles to ensure efficient access control and responsibilities. You will discover how to enable limit increases for business ACH and wire transactions, both at the package level and within the master user profile. You will explore how to configure message queues for staff admins. You will learn how to customize site text to improve user experience and provide clarity in communications. You will understand how to update price lists to charge for limits functionality, if applicable."],"notes":[],"dur":"35 min","titleOnly":false},{"id":36,"title":"Customizing Your Theme With Theme Builder","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/75360ae3-9990-46bf-9728-50e7f2616cc8","desc":["The Theme Builder is a self-service application that enables your FI to update the theme of the Alkami Platform for your end users. Your FI can update themes at any time and have the changes go to Staging in under an hour. There is currently no limit to the number of themes that your FI can create, all at no additional cost."],"notes":[],"dur":null,"titleOnly":false},{"id":37,"title":"Secure Message Center: Features & Functionality","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/59b2f626-4b2d-4d40-b8c1-47c7ce5df83b","desc":["In this course, you will learn how to communicate with your end users and other FI admin users using the Secure Message Center. You will learn how to create and assign message queues, create message templates, configure SLA settings, send and respond to messages, view and download attachments, and organize the Message Center. You will also learn how to support your end users with their messages."],"notes":[],"dur":null,"titleOnly":false},{"id":38,"title":"Executing Bulk User Operations","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/9e64e2b3-cdde-4270-8367-ac2f61a23231","desc":["The Bulk Operations feature is used to enable, disable, or delete groups of registered end users from the Alkami Platform. This course will provide your FI with best practices and instructions to successfully execute bulk user operations."],"notes":[],"dur":null,"titleOnly":false},{"id":39,"title":"Chat: Features & Integrations","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/9e64e2b3-cdde-4270-8367-ac2f61a23231","desc":["Chat integrations help your financial institution (FI) connect with and engage end users via Chat, Messaging, Voice, Video, and AI, and guide them on-screen within the Alkami application using CoBrowsing. This will help your FI’s customer service representatives assist in quickly resolving issues without end users having to call into your FI’s customer service centers."],"notes":[],"dur":null,"titleOnly":false},{"id":40,"title":"Managing Your FI Admin Users","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/fd7d3fac-e00c-44ef-9d20-77c45db86c48","desc":["This course will show you how to manage who can access and perform different tasks on the platform. You will learn how to create FI admin roles and assign permissions, understand what access each permission level gives, add and manage FI admin users, view and edit FI admin user information, and reset FI admin user passwords."],"notes":[],"dur":null,"titleOnly":false},{"id":41,"title":"Registering & Supporting Retail End Users","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/7ca4fa45-83b9-4f87-a664-84837604297a","desc":["The Alkami Platform's customer service solutions allows your FI to provide first-class digital experiences and support for your end users. This course will walk you through the features and functionality of the Support menu in the FI Admin Platform."],"notes":[],"dur":null,"titleOnly":false},{"id":42,"title":"General Settings in the FI Admin Platform","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/764507f4-afa3-4e0e-ba12-b7ef72a5a029","desc":["This course will show you how to access and modify the general settings of your financial institution in the FI Admin Platform. You will learn how to view and edit your FI’s basic information, such as name, address, phone number, and email. You will also learn how to update your FI’s site and mobile logos."],"notes":[],"dur":null,"titleOnly":false},{"id":43,"title":"Mappings in the FI Admin Platform","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/45bda6a0-2bdb-49d4-a848-d231c777c550","desc":["This course will teach you how to set up and manage accounts and transactions in the FI Admin Platform. You will learn how to configure Account Types and Account Type Classes, create Savings Goal Categories, add Transaction Category Classifications (if needed), and configure Transaction Types and Transaction Codes."],"notes":[],"dur":null,"titleOnly":false},{"id":44,"title":"Utilizing the Secure Forms Builder","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/f6782a3f-889e-4ed0-a8fb-7814aa7fe475","desc":["Secure Forms Builder enables your FI to create custom forms for your end users to complete and submit. In this course, you will learn how to utilize the Secure Forms Builder in the FI Admin Platform."],"notes":[],"dur":null,"titleOnly":false},{"id":45,"title":"Airship and Gimbal Messaging: Registration, Setup, and Targeting Users","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/d3f1ce27-017c-4811-9016-4505283b25b5","desc":["Alkami partners with Airship and Gimbal by Infillion to allow your financial institution (FI) to produce marketing campaigns to promote financial products and services through in-app messaging and push notifications. Airship and Gimbal provide your FI the ability to design vivid, interactive, and unique push notifications and in-app messaging to send to your end users related to geolocations and marketing activities."],"notes":[],"dur":null,"titleOnly":false},{"id":46,"title":"User Sentiment (Alchemer) Mobile Features to Collect End User Feedback on Your Mobile App","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-course-player/c4c0f3b8-39b7-4c1e-847c-3443501740b9","desc":["Do you love our app? One simple question can gauge user sentiment and gather valuable feedback to use as a starting point for further user engagement. This course will teach you how to use Alchemer's features to enable users who love your app to spread the word, and to start conversations with those who aren't satisfied and use insights gained from their feedback to transform your toughest critics into raving fans."],"notes":[],"dur":null,"titleOnly":false},{"id":47,"title":"Customizing Navigation With Navigation Builder","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/29ebc41a-1e01-4f11-8c94-ca39e04a0bb9","desc":["The Navigation Builder is an experience in the FI Admin Platform that allows you to change how your end users navigate the digital banking platform. The robust tool allows you to build custom navigation interfaces and organize widgets and custom URLs in a manner that best serves your FI and its end users."],"notes":[],"dur":null,"titleOnly":false},{"id":48,"title":"Creating, Editing, & Assigning Packages","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/22f0fec2-a714-4bfc-8fdb-e3b5babdecf5","desc":["Packages consist of themes, widgets, and limits which can be configured to provide a tailored experience for specific individual groups of end users. In this course, we'll explore how to edit packages and automatically assign packages to groups of end users."],"notes":[],"dur":null,"titleOnly":false},{"id":49,"title":"Skip a Payment","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/18bc2f76-8cca-45df-b12e-c8196a6c6c00","desc":["Welcome to the Alkami Skip a Payment course! Learn more about how end users can skip a loan payment if approved by their FI."],"notes":[],"dur":null,"titleOnly":false},{"id":50,"title":"Using the View as User Feature","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/7535aee0-3fb1-42e9-8509-c5bef2c18450","desc":["Welcome to the Using the View As User Feature course! This learning resource will teach users about the View As User feature, including what it is, benefits of using it, and how to access it."],"notes":[],"dur":null,"titleOnly":false},{"id":51,"title":"Managing Account Types in FI Admin","type":"Course","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-course-player/40acbc28-ec14-4908-aa17-433bc3fa9897","desc":["This course guides FI Admins through setting up the Account Configuration feature and managing the associated account types."],"notes":[],"dur":null,"titleOnly":false},{"id":52,"title":"Building User-Friendly Navigation in the Admin Console","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/dba4f18f-36f0-4563-ae67-99022416cf7a","desc":["In this 35-minute session, you’ll learn how to create and customize user-friendly navigation menus in the Admin Console. You’ll discover how to update the appearance of navigation menus, add or move packages, and understand how navigation impacts the end-user experience."],"notes":[],"dur":"35 min","titleOnly":false},{"id":53,"title":"Effortless User Registration & Identity Verification in the Admin Console","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/c4432e31-d206-4948-8cad-5284d6b31c2c","desc":["In this 35-minute session, you'll learn how to register users, verify their identity with Digital ID, and handle password resets—all through the Admin Console. You’ll also explore how to navigate the forgot username and forgot password workflows, ensuring a smooth user experience."],"notes":[],"dur":"35 min","titleOnly":false},{"id":54,"title":"Managing Admin Users & Roles in the Admin Console","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/22dcf7af-7bc2-4266-bf0c-743d1a3dcb64","desc":["In this 30-minute session, you’ll learn how to manage admin roles and permissions in the Admin Console. You’ll explore how to create, edit, and disable admin users, ensuring the proper access and security settings are in place for each role."],"notes":[],"dur":"30 min","titleOnly":false},{"id":55,"title":"Managing Packages & Package Assignment in the Admin Console","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/d4338d9e-e9ef-49b3-91d0-6e91b8803789","desc":["In this 45-minute session, you’ll learn how to create packages and set up package assignment rules to ensure the right business users are assigned the correct package. You’ll also learn how to copy, edit, and delete packages while managing package rules."],"notes":[],"dur":"45 min","titleOnly":false},{"id":56,"title":"Mastering General Settings in the Admin Console","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/7995a38d-99a0-4bb5-a275-dd07e3dcf5bb","desc":["In this 30-minute session, you’ll learn how to manage institutional settings in the Admin Console, including configuring the ACH holiday calendar, managing transfer schedules, and updating location information. You’ll also discover what settings require Alkami support for changes."],"notes":[],"dur":"30 min","titleOnly":false},{"id":57,"title":"Optimizing Message Queues, Templates & SLAs in the Admin Console","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/752dab04-cae0-404d-9b8e-5f3929b7e21c","desc":["In this 30-minute session, you’ll explore how to update and maintain message queues and templates for the Secure Message Center. You’ll also learn how to set up Service Level Agreements (SLAs) to ensure timely responses in the message queues."],"notes":[],"dur":"30 min","titleOnly":false},{"id":58,"title":"Managing End User Notifications in the Admin Console","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/a82d0de1-4bb8-4f2c-a907-6aa1695af36e","desc":["In this 20-minute session, you’ll learn how to manage and customize various end-user notifications in the Admin Console. You’ll discover how to update notification verbiage and test notifications to ensure end users receive accurate and timely alerts."],"notes":[],"dur":"20 min","titleOnly":false},{"id":59,"title":"Customizing the End User Dashboard","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/35cc21f6-d996-49a5-9a32-0ab9d987a834","desc":["In this 20-minute session, you’ll learn how to navigate and personalize the end user's Dashboard in the Admin Console. You’ll explore the navigation menu and discover how packages impact the options available to end users."],"notes":[],"dur":"20 min","titleOnly":false},{"id":60,"title":"Exploring the Accounts Widget for End Users","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/337a4c18-72cb-482c-85b8-9c215f7ec0c7","desc":["In this 30-minute session, you’ll get an overview of the Accounts widget and explore the personalization options available to end users. You’ll learn how to assist users with hiding and unhiding accounts, utilizing the search feature, and downloading or printing transaction histories."],"notes":[],"dur":"30 min","titleOnly":false},{"id":61,"title":"Managing Alerts for End Users with the Alerts Widget","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/7969d29f-cd0d-4c01-84a1-6414d767e82d","desc":["In this 30-minute session, you’ll get an overview of the various notifications sent to end users and learn how to edit the verbiage of each alert. You’ll also explore how to assist users with setting up and managing account-level alerts, including those that cannot be turned off, and understand the timing of the three types of platform alerts."],"notes":[],"dur":"30 min","titleOnly":false},{"id":62,"title":"Managing eDocs Subscriptions for End Users","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/0a09ada8-2444-4cb2-a373-8ce6b4dfc01b","desc":["In this 15-minute session, you’ll get a quick overview of how an end user subscribes and unsubscribes to eDocs. You’ll also learn how to assist users in managing their eDocs preferences efficiently within the platform."],"notes":[],"dur":"15 min","titleOnly":false},{"id":63,"title":"Managing Shared Access for End Users","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/923490ea-e1c0-4f4f-89cc-596dfce7f217","desc":["In this 30-minute session, you’ll learn how to create, modify, and delete shared access profiles as an end user. You’ll also explore the available permissions that can be shared on a user’s accounts and understand the steps required for granting shared access."],"notes":[],"dur":"30 min","titleOnly":false},{"id":64,"title":"Managing the Message Center for End Users and Admin Support in the Admin Console","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/81ce5dde-0725-435e-8657-540adc0401ef","desc":["In this 30-minute session, you’ll learn how end users can access and use the Secure Message Center to communicate with their financial institution. You’ll also explore how to respond to messages from the Support Tab in the Admin Console, send bulk messages, and ensure compliance with Service Level Agreements (SLAs)."],"notes":[],"dur":"30 min","titleOnly":false},{"id":65,"title":"Navigating the End User Profile","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/de6a92cd-27c8-445b-a37f-06325ab1909b","desc":["In this 30-minute session, you’ll learn how to navigate the User Profile in the Admin Console for retail users. You’ll explore the information available across all four subtabs of the User Profile and understand how to guide users based on their needs."],"notes":[],"dur":"30 min","titleOnly":false},{"id":66,"title":"Personalizing Settings for End Users","type":"Webinar","cats":["Customer Service (End User Experience and Admin Console)"],"url":"https://au.myabsorb.com/#/online-courses/38ac8b3a-74bc-49fe-87cc-4fc112b30bd5","desc":["In this 30-minute session, you’ll explore how end users can easily edit their personal information and customize their experience on the Alkami platform. You’ll learn which information is shared with your core system and understand the various tabs in the Settings widget."],"notes":[],"dur":"30 min","titleOnly":false},{"id":67,"title":"Introduction to the Alkami SDK","type":"Course","cats":["Extensibility"],"url":"https://au.myabsorb.com/#/online-courses/fe0d7d09-6db5-4716-95dc-5b4dd6b8cca1","desc":["This comprehensive training program is designed to equip you with the skills and knowledge needed to become an expert in utilizing the Alkami SDK for building powerful, extensible, and innovative applications."],"notes":[],"dur":null,"titleOnly":false},{"id":68,"title":"Basics and Foundation of the SDK","type":"Course","cats":["Extensibility"],"url":"https://au.myabsorb.com/#/online-courses/4980467d-5938-4bba-b213-8b9133e36546","desc":["This course takes a deep dive into the foundational elements of the Alkami SDK. You will learn about key components, APIs, and tools, while gaining hands-on experience with real-world use cases. By the end of this course, you will have a strong grasp of how to harness the SDK's potential to craft sophisticated applications."],"notes":[],"dur":null,"titleOnly":false},{"id":69,"title":"Using the SDK","type":"Course","cats":["Extensibility"],"url":"https://au.myabsorb.com/#/online-courses/d0f5a009-bef5-4fcd-b863-6d2655bff773","desc":["Discover how to manage sub users, roles, payees, payment methods, and payment requests in this course."],"notes":[],"dur":null,"titleOnly":true},{"id":70,"title":"Application of the SDK","type":"Course","cats":["Extensibility"],"url":"https://au.myabsorb.com/#/online-courses/b284bc4d-a016-4789-94d7-fd710df405da","desc":["This course will teach you the fundamentals of managing business reports for your business customers. You’ll learn how to print and export reports, filter and customize reports, analyze reports, access Standard Reports, and create, edit, and delete Custom Reports. You’ll also learn how to assist business users as they complete tasks in the Business Reports widget."],"notes":["The Business Reports widget is an add-on product."],"dur":null,"titleOnly":true},{"id":71,"title":"SDK Tutorials","type":"Course","cats":["Extensibility"],"url":"https://au.myabsorb.com/#/curricula/bb6c543b-0b95-4dac-b12f-a33ec99d21b9","desc":["The ability to efficiently customize digital banking for end users is critical to maintaining satisfaction and growth. Alkami’s SDK gives you the opportunity to create personalized digital banking experiences and accelerate the deployment of new features and functionalities. In this course, you will watch our live training tutorial videos explaining how to use Alkami’s SDK functionality."],"notes":[],"dur":null,"titleOnly":false},{"id":72,"title":"Content Creation & Tagging for Non-Marketing Content","type":"Course","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/539ff808-b2b2-44d1-b140-31b4e15ab529","desc":["In this course, you will learn how to create non-marketing content sets, articles, and how to use the media library. In addition, there will be instructions on how to apply content tags to articles within content sets."],"notes":[],"dur":null,"titleOnly":false},{"id":73,"title":"How to Create, Manage, and Publish Marketing Content","type":"Course","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/aab1e909-a604-45a8-8e9c-81ecbb31476f","desc":["In this course, we describe the process of creating and managing marketing content, from selecting and designing the content to publishing the content to specific locations and managing different content versions. We also explain how to create User Lists and Rules to ensure the right content is delivered to the right end users."],"notes":[],"dur":null,"titleOnly":false},{"id":74,"title":"How to Create, Modify, and Publish Non-Marketing Content","type":"Course","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/ecaab278-84bf-4d07-91ac-6f70b6f15f04","desc":["In this course, we describe how to create and publish non-marketing content sets and show you how to configure settings within the FI Admin Platform so that your end users can easily access the content. We also explain how to create non-marketing User Lists and Rules to ensure the right content is delivered to the right end users."],"notes":[],"dur":null,"titleOnly":false},{"id":75,"title":"Managing Marketing Content Through the FI Admin Platform","type":"Course","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/f38cc4ab-2c02-4688-9543-ccde2880554c","desc":["Alkami's content management system (CMS) enables you to manage and display tailored, relevant, and timely content to your end users. In this course, we introduce you to the Dashboard, Content, and Audience Management tabs within the Marketing page of the FI Admin Platform. We show you what marketing content looks like to end users and describe several key concepts that guide how, what, where, and to whom marketing content is delivered."],"notes":[],"dur":null,"titleOnly":false},{"id":76,"title":"Applying and Prioritizing Content Rules for Marketing Campaigns","type":"Webinar","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/f115f8dd-db65-4531-85fb-f690b6d32b36","desc":["In this 20-minute session, you’ll explore how to create and prioritize rules for marketing campaigns, ensuring the right content is displayed at the right time for end users."],"notes":[],"dur":"20 min","titleOnly":false},{"id":77,"title":"Building and Managing Targeted User Lists for Marketing Campaigns","type":"Webinar","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/6df60ad9-34b2-46af-aea2-f023c1402767","desc":["In this 30-minute session, you’ll learn how to create and upload user lists to target specific customer subsets. You’ll also explore how these lists can be applied across different marketing campaigns for more effective outreach."],"notes":[],"dur":"30 min","titleOnly":false},{"id":78,"title":"Building Effective Marketing Campaigns","type":"Webinar","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/e913e529-1dcb-45fe-b845-c63087b64034","desc":["In this 20-minute session, you’ll explore how to create and manage marketing campaigns to target specific areas of the platform. You'll learn to seed all the widgets with various types of campaigns to enhance the end-user experience."],"notes":[],"dur":"20 min","titleOnly":false},{"id":79,"title":"Managing Disclosures for Legal Compliance","type":"Webinar","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/a63e5365-d5b5-4e8a-b1cf-1a414b058adf","desc":["In this 20-minute session, you’ll learn how to manage legal disclosures in the Admin Console. You’ll explore how to modify existing disclosures, create new ones, and track user acceptance to ensure compliance with institutional regulations."],"notes":[],"dur":"20 min","titleOnly":false},{"id":80,"title":"Navigating the Marketing Dashboard for Campaign Insights","type":"Webinar","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/deececf3-5d75-4656-8ae1-6f78b90b69f3","desc":["In this 20-minute session, you’ll learn how to navigate the Marketing Dashboard in the Admin Console. You’ll explore its high-level reporting features and discover how to manipulate the fields to view insights on specific campaigns and marketing content."],"notes":[],"dur":"20 min","titleOnly":false},{"id":81,"title":"Utilizing Header Messages for System Alerts","type":"Webinar","cats":["Marketing & Analytics"],"url":"https://au.myabsorb.com/#/online-courses/336f6f05-5528-48dd-a39b-8a9b49eb8d82","desc":["In this 30-minute session, you’ll learn how to create and manage system alerts using header messages. You’ll explore the best use cases for header messages and how they impact the end-user experience."],"notes":[],"dur":"30 min","titleOnly":false},{"id":82,"title":"Bill Pay: Manage Payees, Payments, and eBills","type":"Course","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/1f2297a1-b77b-41b2-b087-a9070730d2da","desc":["Bill Pay is powerful. It allows your FI to engage with users, build a community, and gain insights into a more complete picture of your end users. Bill pay functionality is delivered via the Alkami Bill Pay widget, which allows end users to manage payees, make payments, manage eBills, and more. Alkami has API support for two industry-leading bill pay providers: FIS / CO-OP and iPay."],"notes":[],"dur":null,"titleOnly":false},{"id":83,"title":"Bill Pay: Utilizing the Dashboard, Quick Bill Pay, and Security Features","type":"Course","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/ea9a8045-e227-4bc2-a89c-5b4ba58f1fb7","desc":["In this course, we'll walk you through additional features of the Bill Pay tab, including configuring Dashboard modules, utilizing Quick Bill Pay, and employing Bill Pay's security features. We will also take a look at the Bill Pay Admin functionality in the FI Admin Platform."],"notes":[],"dur":null,"titleOnly":false},{"id":84,"title":"Remote Deposit Capture (RDC): Depositing Checks Electronically","type":"Course","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/3c6133ed-33d5-4cd2-b293-f3d0c52567ab","desc":["Remote Deposit Capture, or RDC, is a technology that allows FI's to accept electronically deposited checks sent remotely versus having the end users visit a physical location to make their deposits. The end users can take a photo of a single check using a mobile device or a business can capture multiple checks at a time for remote deposit using a RDC machine."],"notes":[],"dur":null,"titleOnly":false},{"id":85,"title":"Retail ACH Essentials: Transfers, ODFI Settings and Configurations, and ACH Processing","type":"Course","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/47afca26-6cc7-40eb-bd2f-7c0ea143662f","desc":["Unlike paper checks, Automated Clearing House (ACH) entries are created and transmitted electronically, making transactions quicker, safer, and easier. Using the Transfers tab, your end users can make ACH debit and credit transfers. Common examples of ACH transfers include Direct Deposit of payroll, government and Social Security benefits, mortgage and bill payments, and online banking payments."],"notes":[],"dur":null,"titleOnly":false},{"id":86,"title":"Retail Wire Transfers","type":"Course","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/4fb8d154-85d9-402f-9968-8f60ae6662e6","desc":["The Retail Wires tab allows end users to transfer money via wire transfer, which offers convenience, speed, and security. The Alkami Platform provides an easy-to-use end user interface for users to submit wire transfers, while the FI Admin Platform offers an intuitive interface for you to process wire transfers quickly and efficiently."],"notes":[],"dur":null,"titleOnly":false},{"id":87,"title":"Transfer Functions: How to Set Up, Schedule, and View Transactions","type":"Course","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/b987cd42-8ab4-4597-aa97-224cb209aa7b","desc":["The Transfers tab allows for the processing of one-time and recurring transfers, as well as loan and credit card payments, via your FI’s core system. End users have complete control over the management of transfers and can schedule, edit, and delete transfers on both Desktop and Mobile."],"notes":[],"dur":null,"titleOnly":false},{"id":88,"title":"Zelle: Features & Functionality","type":"Course","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/4eba5ff2-ddda-4dbb-9c9c-732860c7dc94","desc":["With Zelle, your end users have a fast, safe, and easy way to send money directly between almost any bank account in the U.S., typically within minutes. By simply using an email address or U.S. mobile phone number, end users can send money to people they know and trust. This course provides an overview of the functionality and features of Zelle."],"notes":[],"dur":null,"titleOnly":false},{"id":89,"title":"Money Movement Landing Page Configuration & Use","type":"Course","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/e40b29db-21e0-4f10-b03a-b9dc65862355","desc":["This course will demonstrate how to configure the Money Movement Landing Page within the FI Admin Platform. An example of the end user's perspective via a mobile device is also included."],"notes":[],"dur":null,"titleOnly":false},{"id":90,"title":"Adding External Accounts for Transfer Purposes","type":"Webinar","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/ec93768e-2935-423a-b172-59013c0ae5d4","desc":["In this 20-minute session, you'll learn how an user can attach an account they own at another financial institution to the Alkami platform so they can transfer funds between their internal and external accounts."],"notes":[],"dur":"20 min","titleOnly":false},{"id":91,"title":"Creating and Modifying Retail Transfers","type":"Webinar","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/a5435f43-67c2-4c1e-afb3-4d89efc58780","desc":["This session that explains the various ways a retail user can transfer money internally and via ACH, modify scheduled transfers and review historical transfers."],"notes":[],"dur":null,"titleOnly":false},{"id":92,"title":"Retail ACH Reconciliation in the Admin Console","type":"Webinar","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/a69826b4-f9d8-4376-827c-e37818b81c5e","desc":["This is a session for FI Admins who will be responsible for creating the retail NACHA files to send to the Fed. You'll walk away knowing how to:\nUnderstand how to batch and approve/reject ACH transfer requests from the Admin Console\nUnderstand how ACH transfer risk is scored and where to configure the settings"],"notes":[],"dur":null,"titleOnly":false},{"id":93,"title":"Easy Navigation of Paymentus Bill Pay","type":"Webinar","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/00fc568c-b285-4283-a012-16c06c5348b7","desc":["Explore the Paymentus bill pay widget while exploring the 5-tab functionality and what an end user can do on each tab (Dashboard, Smart Pay, Manage Billers, Pay Bills & Settings)."],"notes":[],"dur":null,"titleOnly":false},{"id":94,"title":"Let's Explore iPay Bill Pay","type":"Webinar","cats":["Money Movement"],"url":"https://au.myabsorb.com/#/online-courses/69fa5e9b-c0db-4798-89b6-aa7b3934ca50","desc":["Explore the iPay bill pay widget with a technical trainer, who will explain the 4-tab functionality and what an end user can do on each tab."],"notes":[],"dur":null,"titleOnly":false},{"id":95,"title":"Client Success Fundamentals","type":"Course","cats":["Partnering with Alkami"],"url":"https://au.myabsorb.com/#/online-courses/16ed1586-ad40-44e7-856e-86b824595307","desc":["Congratulations on Your Launch! Your financial institution’s platform is now live, and you’re officially beginning your journey with Alkami’s Client Success team. Our mission is to deliver an exceptional experience and help your institution gain meaningful value from your partnership with us. In this course, you’ll learn about the roles within the Client Success team, along with key methodologies and processes that guide our approach. You’ll also gain insight into other Alkami teams that play a critical role in maintaining and continuously enhancing your digital banking platform."],"notes":[],"dur":null,"titleOnly":false},{"id":96,"title":"Preparing Your Call Center for Launch","type":"Course","cats":["Partnering with Alkami"],"url":"https://au.myabsorb.com/#/online-courses/810ab0b8-4bc6-4209-af86-4e5ad01cbc74","desc":["As your FI completes User Acceptance Training (UAT), Alkami recommends that your call center implements a variety of best practices to prepare for launch, both from a staff and telephony perspective. This course will help your call center prepare for the increased call volume and demands of launch by proactively making technical adjustments, creating just-in-time training aids, conducting pilot tests, and learning how to troubleshoot and contact Alkami for support."],"notes":[],"dur":null,"titleOnly":false},{"id":97,"title":"FI Admin Foundations","type":"Live session","cats":["LIVE Instructor Led Training"],"url":"https://alkami.zoom.us/webinar/register/7317588092898/WN_qMrUXmAWTCupPGRf4jBUhA","desc":["Equip FI Admins with the tools to configure platform settings and support an optimal user experience; 2 hours"],"notes":[],"dur":"2 hours","titleOnly":false},{"id":98,"title":"FI Admin Retail Ops & Tools","type":"Live session","cats":["LIVE Instructor Led Training"],"url":"https://alkami.zoom.us/webinar/register/6717588092563/WN_P9HbctvKT_WmETzahCND7A","desc":["Support daily operations with tools for registration, notifications, messaging, and user support;  2 hours"],"notes":[],"dur":"2 hours","titleOnly":false},{"id":99,"title":"Business Ops & Reporting","type":"Live session","cats":["LIVE Instructor Led Training"],"url":"https://alkami.zoom.us/webinar/register/8617588094044/WN_9ewt4MkgTjqJKvHOop2-Ig","desc":["Enable FI Admins to support business users and configure operational settings;  2 hours"],"notes":[],"dur":"2 hours","titleOnly":false},{"id":100,"title":"Marketing Essentials","type":"Live session","cats":["LIVE Instructor Led Training"],"url":"https://alkami.zoom.us/webinar/register/1717588093581/WN_0AWt14URTo--oLVtDo1Few","desc":["Typically delivered towards the end of UAT, focusing on in-platform content creation, targeting, and publishing; 2 hours"],"notes":[],"dur":"2 hours","titleOnly":false},{"id":101,"title":"Alkami Platform Overview","type":"Live session","cats":["LIVE Instructor Led Training"],"url":"https://alkami.zoom.us/webinar/register/6617588092173/WN_ytmr091DQwia96jMwjxOcQ","desc":["A comprehensive walkthrough of the platform—from admin tools to crafting end-user experiences. Open to anyone from your FI looking to deepen their understanding and maximize platform value; 3 hours"],"notes":[],"dur":"3 hours","titleOnly":false}];
+
+/* ============ Search engine (runs entirely in the page, catalog content only) ============ */
+var STOP = new Set(("a an the and or of to in on for with about how do does did i me my we our you your they their them it its is are was be can could should would will what where when why who which that this these those need needs want wants help helps find looking look training trainings course courses class classes learn learning resource resources client clients customer customers caller member members asking asked ask asks question questions issue issues problem problems trouble get got have has using use used up out at by from as if so any there some cant cannot able unable trying try like please also into not no just here one more doing done make makes info information").split(" "));
+var TYPEWORDS = {live:"Live session",instructor:"Live session",instructorled:"Live session",inperson:"Live session",classroom:"Live session",webinar:"Webinar",webinars:"Webinar"};
+
+function norm(s){
+  return " "+String(s).toLowerCase().replace(/[’']/g,"")
+    .replace(/\bset[- ]up\b/g,"setup").replace(/\be-docs?\b/g,"edocs").replace(/\blog[- ]in\b/g,"login")
+    .replace(/\bsign[- ]in\b/g,"signin").replace(/\bsign[- ]up\b/g,"signup").replace(/\bco-?brows/g,"cobrows")
+    .replace(/[^a-z0-9]+/g," ")+" ";
+}
+function tokenize(s){ return norm(s).trim().split(" ").filter(function(t){return t && (t.length>1 || /\d/.test(t));}); }
+function stem(w){
+  if(w.length<=3) return w;
+  if(w.length>4 && w.slice(-3)==="ies") return w.slice(0,-3)+"y";
+  if(/(sses|shes|ches|xes)$/.test(w)) return w.slice(0,-2);
+  if(!/(ss|us|is)$/.test(w) && w.slice(-1)==="s") w=w.slice(0,-1);
+  if(w.length>5 && w.slice(-3)==="ing") w=w.slice(0,-3);
+  else if(w.length>4 && w.slice(-2)==="ed") w=w.slice(0,-2);
+  if(w.length>4 && w.slice(-1)==="e") w=w.slice(0,-1);
+  return w;
+}
+function lev1(a,b){
+  if(a===b) return true;
+  var la=a.length, lb=b.length; if(Math.abs(la-lb)>1) return false;
+  var i=0; while(i<la && i<lb && a[i]===b[i]) i++;
+  if(la===lb) return a.slice(i+1)===b.slice(i+1) || (a[i]===b[i+1] && a[i+1]===b[i] && a.slice(i+2)===b.slice(i+2));
+  if(la>lb) return a.slice(i+1)===b.slice(i);
+  return b.slice(i+1)===a.slice(i);
+}
+function matchW(q,v){
+  if(q===v) return 1;
+  var lq=q.length, lv=v.length, mn=Math.min(lq,lv);
+  if(mn>=4){
+    var cp=0; while(cp<mn && q[cp]===v[cp]) cp++;
+    if(cp>=5 && cp/mn>=0.75) return 0.7;
+    if(cp===mn && Math.abs(lq-lv)<=3) return 0.6;
+  }
+  if(lq>=5 && lv>=5 && lev1(q,v)) return 0.6;
+  return 0;
+}
+
+/* Related-term groups (used only to widen what a rep's words can match; no content is added) */
+var SYN_RAW = [
+ ["wire","wires","wire transfer","wire transfers","fedwire"],
+ ["ach","nacha","odfi","direct deposit"],
+ ["rdc","remote deposit","remote deposit capture","mobile deposit","check deposit","deposit a check","deposit checks","depositing checks","deposit check"],
+ ["bill pay","billpay","pay bills","bill payment","ebill","ebills","paymentus","ipay"],
+ ["payee","payees","biller","billers"],
+ ["sub user","sub users","subuser","subusers"],
+ ["admin console","fi admin","admin platform","fi admin platform"],
+ ["business","commercial"],
+ ["retail","consumer"],
+ ["role","roles","permission","permissions"],
+ ["sdk","extensibility","developer","developers"],
+ ["credit score","savvymoney","savvy money","fico","credit report","credit health","credit monitoring"],
+ ["tde","transaction data enrichment","categorization","categorisation","categorize"],
+ ["spending","budget","budgeting"],
+ ["dao","digital account opening","open account","open an account","new account","account opening","quick apply","loan application"],
+ ["push","push notification","push notifications","airship","gimbal","in-app messaging","in app messaging"],
+ ["message center","secure message","secure messages","secure messaging","message queue","message queues","sla","slas"],
+ ["alert","alerts","notification","notifications","notify"],
+ ["register","registration","registering","enroll","enrollment","sign up","digital id","identity verification","verify identity"],
+ ["password","forgot password","forgot username","username","login","log in","sign in","locked out","reset password","credentials"],
+ ["navigation","navigate","menu","menus","navigation builder"],
+ ["theme","themes","branding","look and feel","colors","logo","logos"],
+ ["chat","live chat","cobrowse","cobrowsing","co-browse","co-browsing","chatbot"],
+ ["zelle","p2p","person to person"],
+ ["card","cards","debit card","credit card","card controls","card management","card alerts"],
+ ["limit","limits","limit increase","over limit","limit management","transaction limits"],
+ ["onboarding","onboard","new hire","new employee","new to","newbie","getting started","get started","overview","foundations","fundamentals","beginner"],
+ ["call center","contact center","csr","support team","launch","uat"],
+ ["feedback","survey","surveys","sentiment","alchemer"],
+ ["report","reports","reporting"],
+ ["reconcile","reconciliation","reconciling","nacha file","fed file"],
+ ["marketing","campaign","campaigns","promotion","promotions","cms"],
+ ["disclosure","disclosures","compliance","legal"],
+ ["edocs","estatement","estatements","e-statement","e-statements","statement","statements"],
+ ["bulk","mass","multiple users","disable users","delete users"],
+ ["view as user","view as","impersonate","see what the user sees"],
+ ["shared access","share access","joint account","joint"],
+ ["external account","external accounts","link account","link accounts","other bank","outside account","account aggregation","aggregate"],
+ ["dispute","disputes","fraud","fraudulent","unauthorized transaction"]
+];
+var SYN = SYN_RAW.map(function(g){ return g.map(function(t){return norm(t).trim();}); });
+
+/* Build index */
+var N = DATA.length, vocab = new Map(), seqT = [], seqD = [];
+var FW = {title:3.0, cat:1.2, desc:1.0};
+function stemSeq(text){ return tokenize(text).filter(function(t){return !STOP.has(t);}).map(stem); }
+DATA.forEach(function(d,i){
+  function add(text,w){
+    var toks = stemSeq(text), tf = {};
+    toks.forEach(function(t){tf[t]=(tf[t]||0)+1;});
+    var adj = w; if(w===FW.desc){ adj = w/Math.min(1.5,Math.max(0.85,Math.sqrt(toks.length/42))); }
+    Object.keys(tf).forEach(function(t){
+      var m = vocab.get(t); if(!m){m=new Map(); vocab.set(t,m);}
+      m.set(i,(m.get(i)||0)+adj*(1+Math.log(tf[t])));
+    });
+  }
+  add(d.title,FW.title); add(d.cats.join(" "),FW.cat);
+  var dtext = d.desc.join(" ");
+  if(!d.titleOnly) add(dtext,FW.desc);
+  seqT[i] = " "+stemSeq(d.title).join(" ")+" ";
+  seqD[i] = d.titleOnly ? " " : " "+stemSeq(dtext).join(" ")+" ";
+});
+var IDF = new Map();
+vocab.forEach(function(m,t){ var df=m.size; IDF.set(t, Math.log(1+(N-df+0.5)/(df+0.5))); });
+
+function parseQuery(q){
+  var n = norm(q), raw = tokenize(q), terms = [], origStems = [], typeIntent = null;
+  var kept = [];
+  raw.forEach(function(t){
+    if(TYPEWORDS[t]){ typeIntent = TYPEWORDS[t]; return; }
+    if(STOP.has(t)) return;
+    kept.push(t);
+    var s = stem(t);
+    if(origStems.indexOf(s)<0){ origStems.push(s); terms.push({stem:s,w:1,label:t,kind:"q",covers:[s]}); }
+  });
+  var synCovered = {};
+  SYN.forEach(function(g){
+    var hits = g.filter(function(t){ return n.indexOf(" "+t+" ")>=0; });
+    if(!hits.length) return;
+    var hit = hits[0], covers = [];
+    hits.forEach(function(h){ tokenize(h).filter(function(x){return !STOP.has(x);}).forEach(function(x){ var s=stem(x); if(covers.indexOf(s)<0) covers.push(s); }); });
+    covers.forEach(function(s){ synCovered[s]=1; });
+    g.forEach(function(t){
+      if(hits.indexOf(t)>=0) return;
+      tokenize(t).filter(function(x){return !STOP.has(x);}).forEach(function(x){
+        var s = stem(x);
+        if(!terms.some(function(e){return e.stem===s;})) terms.push({stem:s,w:0.45,label:hit,kind:"syn",covers:covers});
+      });
+    });
+  });
+  var bigrams = [];
+  for(var i=0;i<kept.length-1;i++) bigrams.push(stem(kept[i])+" "+stem(kept[i+1]));
+  var full = kept.map(stem).join(" ");
+  return {terms:terms, synCovered:synCovered, origStems:origStems, bigrams:bigrams, full:full, nKept:kept.length, typeIntent:typeIntent};
+}
+
+function runSearch(q){
+  var P = parseQuery(q);
+  if(!P.origStems.length){
+    if(P.typeIntent){
+      var all = []; DATA.forEach(function(d,i){ if(d.type===P.typeIntent) all.push({id:i,score:1,cov:1,labels:[]}); });
+      all.sort(function(a,b){ return DATA[a.id].title.localeCompare(DATA[b.id].title); });
+      return {P:P, hits:all, missing:[], typeOnly:true};
+    }
+    return {P:P, hits:[], missing:[]};
+  }
+  var per = P.terms.map(function(t){
+    var m = new Map();
+    vocab.forEach(function(dm,v){
+      var mw = matchW(t.stem,v); if(!mw) return;
+      var idf = IDF.get(v);
+      dm.forEach(function(sc,di){ var val = mw*idf*sc; if(val>(m.get(di)||0)) m.set(di,val); });
+    });
+    return m;
+  });
+  var missing = [];
+  P.terms.forEach(function(t,ti){ if(t.kind==="q" && per[ti].size===0 && !P.synCovered[t.stem]) missing.push(t.label); });
+  var cand = new Set(); per.forEach(function(m){ m.forEach(function(_,di){cand.add(di);}); });
+  var hits = [];
+  cand.forEach(function(di){
+    var total = 0, covered = {}, labels = [], seenL = {};
+    P.terms.forEach(function(t,ti){
+      var v = per[ti].get(di); if(!v) return;
+      total += t.w*v;
+      t.covers.forEach(function(s){covered[s]=1;});
+      var key = t.kind+":"+t.label;
+      if(!seenL[key]){ seenL[key]=1; labels.push({text:t.label, kind:t.kind}); }
+    });
+    var cov = P.origStems.filter(function(s){return covered[s];}).length / P.origStems.length;
+    if(cov===0) return;
+    var bonus = 0;
+    P.bigrams.forEach(function(b){
+      if(seqT[di].indexOf(" "+b+" ")>=0) bonus += 1.6;
+      else if(seqD[di].indexOf(" "+b+" ")>=0) bonus += 0.6;
+    });
+    if(P.nKept>=3 && seqT[di].indexOf(" "+P.full+" ")>=0) bonus += 3;
+    var score = total*(0.5+0.5*cov) + bonus;
+    if(P.typeIntent && DATA[di].type===P.typeIntent) score *= 1.45;
+    hits.push({id:di, score:score, cov:cov, labels:labels});
+  });
+  hits.sort(function(a,b){ return b.score-a.score || DATA[a.id].title.localeCompare(DATA[b.id].title); });
+  if(hits.length){
+    var top = hits[0].score;
+    hits = hits.filter(function(h){ return h.score >= top*0.22; });
+  }
+  return {P:P, hits:hits, missing:missing};
+}
+
+/* ============ UI ============ */
+var $ = function(s){return document.querySelector(s);};
+var state = {q:"", type:"all", cat:"all", expanded:{}, showAll:false};
+var QUICK = ["Reset a client’s password","Set up Zelle","Business wire transfers","Add sub users to a business account","Mobile check deposit","Update alerts and notifications","Bill pay","Card controls","Overview of the platform"];
+var TYPES = ["Course","Webinar","Live session"];
+var TYPE_LABEL_PLURAL = {"Course":"Courses","Webinar":"Webinars","Live session":"Live sessions"};
+var TYPE_CLASS = {"Course":"t-course","Webinar":"t-webinar","Live session":"t-live"};
+var CATS = []; DATA.forEach(function(d){ d.cats.forEach(function(c){ if(CATS.indexOf(c)<0) CATS.push(c); }); });
+CATS.sort(function(a,b){ return a.localeCompare(b); });
+var LAST = {hits:[], missing:[], P:null};
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function hl(text, P){
+  if(!P || !P.terms.length) return esc(text);
+  var out = "", last = 0, re = /[A-Za-z0-9]+/g, m;
+  while((m = re.exec(text))){
+    var w = m[0], lw = w.toLowerCase(), hit = false;
+    if(!STOP.has(lw) && lw.length>1){
+      var s = stem(lw);
+      for(var i=0;i<P.terms.length;i++){
+        var t = P.terms[i], mw = matchW(t.stem,s);
+        if((t.kind==="q" && mw>=0.6) || (t.kind==="syn" && mw===1)){ hit=true; break; }
+      }
+    }
+    out += esc(text.slice(last,m.index)) + (hit ? "<mark>"+esc(w)+"</mark>" : esc(w));
+    last = m.index + w.length;
+  }
+  return out + esc(text.slice(last));
+}
+
+var ICON = {
+  clock:'<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.3 1.5"/></svg>',
+  open:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2.5h4.5V7M13.5 2.5L7 9M11.5 9.5v3a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3"/></svg>',
+  link:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a2.8 2.8 0 0 0 4 0l2-2a2.8 2.8 0 0 0-4-4l-.8.8M9.2 6.8a2.8 2.8 0 0 0-4 0l-2 2a2.8 2.8 0 0 0 4 4l.8-.8"/></svg>',
+  msg:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/></svg>'
+};
+
+function cardHTML(h, i, opts){
+  var d = DATA[h.id], P = LAST.P, best = !!opts.best, cls = TYPE_CLASS[d.type];
+  var long = d.desc.join(" ").length > 250 || d.desc.length>1;
+  var open = !!state.expanded[d.id];
+  var descHTML = d.desc.map(function(p){ return "<p>"+hl(p,P)+"</p>"; }).join("");
+  var notes = d.notes.map(function(n){ return '<div class="note"><b>Note:</b> '+hl(n,P)+'</div>'; }).join("");
+  var why = "";
+  if(h && h.labels && h.labels.length && state.q.trim()){
+    var q = h.labels.filter(function(l){return l.kind==="q";}).map(function(l){return l.text;});
+    var s = h.labels.filter(function(l){return l.kind==="syn";}).map(function(l){return l.text;});
+    var chips = q.concat(s.filter(function(x){return q.indexOf(x)<0;})).slice(0,5);
+    if(chips.length) why = '<div class="why"><span class="k">Matched</span>'+chips.map(function(c){return '<span class="m">'+esc(c)+'</span>';}).join("")+'</div>';
+  }
+  var action = d.type==="Live session" ? "Register" : (d.type==="Webinar" ? "Open webinar" : "Open course");
+  return '<article class="card '+cls+(best?' best':'')+((long&&!open)?' clamp':'')+'" data-id="'+d.id+'">'
+    + (best ? '<span class="ribbon">Best match</span>' : '')
+    + '<div class="meta" style="margin-top:'+(best?'10':'0')+'px"><span class="badge"><i></i>'+esc(d.type)+'</span>'
+    + (d.dur ? '<span class="dur">'+ICON.clock+esc(d.dur)+'</span>' : '')
+    + '<span class="dot">•</span><span>'+esc(d.cats.join(" · "))+'</span></div>'
+    + '<h3>'+hl(d.title,P)+'</h3>'
+    + '<div class="desc">'+descHTML+'</div>'
+    + (long ? '<button class="more" type="button" data-act="expand" data-id="'+d.id+'" aria-expanded="'+open+'">'+(open?'Show less':'Show more')+'</button>' : '')
+    + notes + why
+    + '<div class="actions">'
+    + '<a class="btn '+(best?'gold':'primary')+'" href="'+esc(d.url)+'" target="_blank" rel="noopener noreferrer">'+ICON.open+action+'</a>'
+    + '<button class="btn ghost" type="button" data-act="copylink" data-id="'+d.id+'">'+ICON.link+'Copy link</button>'
+    + '<button class="btn ghost" type="button" data-act="copyreply" data-id="'+d.id+'">'+ICON.msg+'Copy for client</button>'
+    + '</div></article>';
+}
+
+function browseList(){
+  var types = {"Course":0,"Webinar":1,"Live session":2};
+  return DATA.map(function(d){return {id:d.id,score:0,labels:[]};}).sort(function(a,b){
+    var A=DATA[a.id],B=DATA[b.id];
+    return types[A.type]-types[B.type] || A.title.localeCompare(B.title);
+  });
+}
+
+function render(){
+  var q = state.q.trim(), res = $("#results"), summary = $("#summary");
+  var base, missing = [], P = null, searching = q.length>0, typeOnly = false;
+  if(searching){ var r = runSearch(q); base = r.hits; missing = r.missing; P = r.P; typeOnly = !!r.typeOnly; LAST = {hits:base, missing:missing, P:P}; }
+  else { base = state.cat==="all" ? [] : browseList(); LAST = {hits:[], missing:[], P:null}; }
+  var catFiltered = base.filter(function(h){ return state.cat==="all" || DATA[h.id].cats.indexOf(state.cat)>=0; });
+  var counts = {all:catFiltered.length}; TYPES.forEach(function(t){ counts[t]=catFiltered.filter(function(h){return DATA[h.id].type===t;}).length; });
+  var list = catFiltered.filter(function(h){ return state.type==="all" || DATA[h.id].type===state.type; });
+
+  /* type segmented control */
+  var segHTML = '<button type="button" data-type="all" aria-pressed="'+(state.type==="all")+'">All'+((searching||state.cat!=="all")?'<span class="n">'+counts.all+'</span>':'')+'</button>';
+  TYPES.forEach(function(t){ segHTML += '<button type="button" data-type="'+t+'" aria-pressed="'+(state.type===t)+'">'+TYPE_LABEL_PLURAL[t]+((searching||state.cat!=="all")?'<span class="n">'+counts[t]+'</span>':'')+'</button>'; });
+  $("#typeSeg").innerHTML = segHTML;
+
+  if(!searching && state.cat==="all"){
+    /* Home: browse tiles */
+    summary.innerHTML = "";
+    var shapes = [
+      '<svg class="g" viewBox="0 0 58 58" aria-hidden="true"><rect width="58" height="58" fill="#152E7C"/><path d="M29 8L50 30H8z" fill="#357DE4"/><path d="M29 30L50 52H8z" fill="#1F64C5"/></svg>',
+      '<svg class="g" viewBox="0 0 58 58" aria-hidden="true"><rect width="58" height="58" fill="#1B9587"/><path d="M58 0A58 58 0 0 1 0 58V0z" fill="#29DBBE"/></svg>',
+      '<svg class="g" viewBox="0 0 58 58" aria-hidden="true"><rect width="58" height="58" fill="#692E53"/><path d="M0 0l29 29L58 0v29L29 58 0 29z" fill="#AE5294"/></svg>',
+      '<svg class="g" viewBox="0 0 58 58" aria-hidden="true"><rect width="58" height="58" fill="#0251B3"/><rect x="0" y="29" width="29" height="29" fill="#357DE4"/><rect x="29" y="0" width="29" height="29" fill="#1F64C5"/></svg>'
+    ];
+    var tiles = CATS.map(function(c,i){
+      var n = DATA.filter(function(d){return d.cats.indexOf(c)>=0;}).length;
+      return '<button class="tile" type="button" data-cat="'+esc(c)+'">'+shapes[i%shapes.length]+'<b>'+esc(c)+'</b><span>'+n+' resource'+(n===1?'':'s')+'</span></button>';
+    }).join("");
+    var homeList = "";
+    if(state.type!=="all"){
+      var bl = browseList().filter(function(h){return DATA[h.id].type===state.type;});
+      homeList = '<h2 class="h2s">All '+TYPE_LABEL_PLURAL[state.type].toLowerCase()+' <span style="color:var(--muted);font-size:16px;font-family:var(--sans);font-weight:700">'+bl.length+'</span></h2><div class="list">'+bl.map(function(h,i){return cardHTML(h,i,{best:false});}).join("")+'</div>';
+    }
+    res.innerHTML = '<h2 class="h2s" style="margin-top:20px">Or browse by category</h2><div class="tiles">'+tiles+'</div>'+homeList;
+    return;
+  }
+
+  /* Summary line */
+  var title, sub = "";
+  if(searching){
+    title = list.length ? (list.length+" suggestion"+(list.length===1?"":"s")+" for “"+q+"”") : "No match for “"+q+"”";
+    if(typeOnly && list.length) title = list.length+" "+TYPE_LABEL_PLURAL[P.typeIntent].toLowerCase()+" in the catalog";
+    else if(P && P.typeIntent && list.length) sub = "Leaning toward "+P.typeIntent.toLowerCase()+"s based on your wording.";
+  } else {
+    title = state.cat + " — " + list.length + " resource"+(list.length===1?"":"s");
+  }
+  var copyAll = (searching && list.length) ? '<button class="btn ghost sm" type="button" data-act="copytop">'+ICON.msg+'Copy top picks for client</button>' : '';
+  summary.innerHTML = '<div><h2>'+esc(title)+'</h2>'+(sub?'<p class="sub">'+esc(sub)+'</p>':'')+'</div>'+copyAll;
+
+  if(!list.length){
+    var extra = "";
+    if(searching && counts.all>0 && state.type!=="all") extra = "Try “All” formats — there are "+counts.all+" match"+(counts.all===1?"":"es")+" in other formats.";
+    else if(searching) extra = "Try different words, a product name (like “Zelle” or “Bill Pay”), or browse by category.";
+    else extra = "Nothing in this category for that format.";
+    var filtered = state.cat!=="all" || state.type!=="all";
+    if(searching && filtered && base.length===0 && !typeOnly) extra = "Nothing matches that wording yet. Try different words or a product name.";
+    if(searching && state.cat!=="all" && catFiltered.length===0 && base.length>0) extra = "Nothing in “"+state.cat+"” matches. "+base.length+" match"+(base.length===1?"":"es")+" in other categories.";
+    if(searching && typeOnly && state.cat!=="all") extra = "No "+TYPE_LABEL_PLURAL[P.typeIntent].toLowerCase()+" in “"+state.cat+"”.";
+    res.innerHTML = '<div class="empty"><h2>Nothing here yet</h2><p>'+esc(extra)+'</p><p>'
+      + (filtered ? '<button class="btn primary" type="button" data-act="clearfilters">Clear filters</button> ' : '')
+      + (searching ? '<button class="btn ghost" type="button" data-act="home">Browse by category</button>' : '')
+      + '</p></div>';
+    return;
+  }
+
+  var html = '';
+  if(searching){
+    var top = list[0];
+    var weak = !typeOnly && (top.cov < 0.5 || top.score < 2.2);
+    if(weak) html += '<div class="weak"><b>Closest matches.</b> Nothing lines up exactly with that wording. Worth a quick second look before sending.</div>';
+    if(missing.length) html += '<p class="miss">No catalog hits for: '+missing.map(function(m){return "“"+esc(m)+"”";}).join(", ")+'</p>';
+    html += '<div class="list">';
+    if(typeOnly){ html += list.map(function(h,i){return cardHTML(h,i,{best:false});}).join("") + '</div>'; res.innerHTML = html; return; }
+    html += cardHTML(list[0],0,{best:!weak});
+    var rest = list.slice(1);
+    var first = rest.slice(0,5), more = rest.slice(5);
+    if(first.length) html += '<div class="section-label">Also worth a look</div>' + first.map(function(h,i){return cardHTML(h,i+1,{best:false});}).join("");
+    if(more.length){
+      if(state.showAll) html += '<div class="section-label">More results</div>' + more.map(function(h,i){return cardHTML(h,i+6,{best:false});}).join("");
+      else html += '<button class="btn ghost moreBtn" type="button" data-act="showall">Show '+more.length+' more result'+(more.length===1?'':'s')+'</button>';
+    }
+    html += '</div>';
+  } else {
+    html += '<div class="list">'+list.map(function(h,i){return cardHTML(h,i,{best:false});}).join("")+'</div>';
+  }
+  res.innerHTML = html;
+}
+
+function buildCatSelect(){
+  var s = $("#cat"), h = '<option value="all">All categories</option>';
+  CATS.forEach(function(c){ h += '<option value="'+esc(c)+'">'+esc(c)+'</option>'; });
+  s.innerHTML = h; s.value = state.cat;
+}
+function setQuery(v, opts){
+  state.q = v; state.showAll = false;
+  var inp = $("#q"); if(inp.value!==v) inp.value = v;
+  $("#clear").classList.toggle("on", v.length>0);
+  render();
+  if(opts && opts.save) saveRecent(v);
+}
+
+/* recent searches (per-viewer convenience; safe if storage is unavailable) */
+function getRecent(){ try{ var r = JSON.parse(localStorage.getItem("ta_recent")||"[]"); return Array.isArray(r)?r.slice(0,5):[]; }catch(e){ return []; } }
+function saveRecent(q){
+  q = q.trim(); if(q.length<3) return;
+  try{ var r = getRecent().filter(function(x){return x.toLowerCase()!==q.toLowerCase();}); r.unshift(q); localStorage.setItem("ta_recent", JSON.stringify(r.slice(0,5))); }catch(e){}
+  drawRecent();
+}
+function drawRecent(){
+  var r = getRecent(), w = $("#recentWrap");
+  w.hidden = !r.length;
+  $("#recent").innerHTML = r.map(function(x){return '<button class="chip" type="button" data-q="'+esc(x)+'">'+esc(x)+'</button>';}).join("");
+}
+
+/* clipboard */
+function toast(msg){ var t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toast._t); toast._t=setTimeout(function(){t.classList.remove("on");},1800); }
+function copy(text, msg){
+  function fallback(){
+    try{ var ta=document.createElement("textarea"); ta.value=text; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); var ok=document.execCommand("copy"); document.body.removeChild(ta); toast(ok?msg:"Couldn’t copy — select and copy manually"); }catch(e){ toast("Couldn’t copy — select and copy manually"); }
+  }
+  try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){toast(msg);}, fallback); } else fallback(); }catch(e){ fallback(); }
+}
+function line(d){ return d.title+" ("+d.type+(d.dur?", "+d.dur:"")+")"; }
+
+/* events */
+$("#q").addEventListener("input", function(e){
+  var v = e.target.value; setQuery(v);
+  clearTimeout(this._t); this._t = setTimeout(function(){ saveRecent(v); }, 1200);
+});
+$("#q").addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); saveRecent(this.value); this.blur(); } if(e.key==="Escape"){ setQuery(""); } });
+$("#clear").addEventListener("click", function(){ setQuery(""); $("#q").focus(); });
+document.addEventListener("keydown", function(e){
+  if(e.key==="/" && document.activeElement && document.activeElement.tagName!=="INPUT" && document.activeElement.tagName!=="SELECT"){ e.preventDefault(); $("#q").focus(); }
+});
+$("#cat").addEventListener("change", function(e){ state.cat = e.target.value; state.showAll=false; render(); });
+$("#typeSeg").addEventListener("click", function(e){ var b=e.target.closest("button[data-type]"); if(!b) return; state.type=b.getAttribute("data-type"); state.showAll=false; render(); });
+document.addEventListener("click", function(e){
+  var chip = e.target.closest("button[data-q]");
+  if(chip){ setQuery(chip.getAttribute("data-q"), {save:true}); window.scrollTo({top:document.querySelector("main").offsetTop-10,behavior:"smooth"}); return; }
+  var tile = e.target.closest("button[data-cat]");
+  if(tile){ state.cat = tile.getAttribute("data-cat"); $("#cat").value = state.cat; state.type="all"; render(); window.scrollTo({top:document.querySelector("main").offsetTop-10,behavior:"smooth"}); return; }
+  var a = e.target.closest("[data-act]"); if(!a) return;
+  var act = a.getAttribute("data-act"), id = +a.getAttribute("data-id"), d = DATA[id];
+  if(act==="expand"){ state.expanded[id] = !state.expanded[id]; render(); var el=document.querySelector('.more[data-id="'+id+'"]'); if(el) el.focus(); }
+  else if(act==="copylink"){ copy(d.url,"Link copied"); }
+  else if(act==="copyreply"){ copy("This should help: "+line(d)+"\n"+d.url,"Reply copied"); }
+  else if(act==="copytop"){
+    var picks = LAST.hits.filter(function(h){ return (state.cat==="all"||DATA[h.id].cats.indexOf(state.cat)>=0) && (state.type==="all"||DATA[h.id].type===state.type); }).slice(0,3);
+    copy("Here are some resources that should help:\n\n"+picks.map(function(h,i){var x=DATA[h.id]; return (i+1)+". "+line(x)+"\n   "+x.url;}).join("\n\n"),"Top picks copied");
+  }
+  else if(act==="showall"){ state.showAll = true; render(); }
+  else if(act==="clearfilters"){ state.cat="all"; state.type="all"; $("#cat").value="all"; state.showAll=false; render(); }
+  else if(act==="home"){ setQuery(""); state.cat="all"; $("#cat").value="all"; state.type="all"; render(); }
+});
+
+/* init */
+$("#picks").innerHTML = QUICK.map(function(x){return '<button class="chip" type="button" data-q="'+esc(x)+'">'+esc(x)+'</button>';}).join("");
+$("#footNote").textContent = "Built from the training catalog · "+N+" resources";
+buildCatSelect(); drawRecent(); render();
+window.__advisor = {search:function(q){ var r=runSearch(q); return r.hits.map(function(h){return [DATA[h.id].title, DATA[h.id].type, +h.score.toFixed(2), +h.cov.toFixed(2)];}); }};
+})();
+</script>
+</body>
+</html>
