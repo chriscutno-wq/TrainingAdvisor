@@ -8,12 +8,12 @@
 <style>
 :root{
   --navy:#071351; --blue-2:#152E7C; --blue-3:#0251B3; --blue-4:#1F64C5; --blue-5:#357DE4;
-  --white:#FFFFFF; --paper:#FAFAFA; --line:#DBDBDB;
+  --white:#FFFFFF;
   --gold:#F3AB39; --gold-2:#FAD564;
   --teal:#1EAF9B; --teal-2:#29DBBE; --sky:#7EDEFC;
   --focus:#FAD564;
   --font:"Nunito Sans", Calibri, "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
-  --head:Alverata, Cambria, Georgia, "Times New Roman", serif;
+  --pixel:"Courier New", Consolas, monospace;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -24,21 +24,31 @@ canvas:focus-visible{box-shadow:inset 0 0 0 3px var(--focus)}
 [hidden]{display:none !important}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* HUD */
+/* HUD: retro panel with coin counter */
 #hud{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px 12px;pointer-events:none;z-index:4}
-.chip{pointer-events:auto;background:rgba(7,19,81,.86);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.35;max-width:min(560px,70vw)}
-.hud-line{font-weight:700}
-.hud-line.small{font-weight:600;font-size:13px;opacity:.9;margin-top:4px}
-.bar{height:6px;background:rgba(255,255,255,.2);border-radius:4px;margin:6px 0 4px;overflow:hidden}
-#hud-bar{height:100%;width:0;background:var(--teal-2);transition:width .4s}
-.tokens{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
-.token{border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:2px 9px;font-size:13px;white-space:nowrap}
-.token.on{background:var(--teal);border-color:var(--teal-2);font-weight:700}
+.chip{pointer-events:auto;background:linear-gradient(#0B1C6E,#071351);border:3px solid #FFFFFF;box-shadow:0 0 0 3px #071351,0 0 0 5px #7EDEFC,0 6px 0 5px rgba(0,0,0,.25);border-radius:6px;padding:8px 12px;font-size:14px;line-height:1.35;max-width:min(560px,70vw)}
+.hud-top{font-family:var(--pixel);font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-shadow:2px 2px 0 #000;color:var(--gold-2);font-size:14px}
+.bar{height:8px;background:#0A1A52;border:2px solid #000;margin:6px 0 6px;overflow:hidden}
+#hud-bar{height:100%;width:0;background:repeating-linear-gradient(90deg,#29DBBE 0 8px,#1EAF9B 8px 10px);transition:width .4s}
+.hud-row{display:flex;align-items:center;gap:8px;font-family:var(--pixel);font-weight:700;text-shadow:2px 2px 0 #000}
+.coin{display:inline-block;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF6B0 0 15%,#FFD23F 35%,#F3AB39 75%,#B86E12 100%);border:2px solid #7A4305;box-shadow:0 0 6px rgba(255,210,80,.6)}
+.tokens{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}
+.token{border:2px solid rgba(255,255,255,.5);border-radius:3px;padding:1px 7px;font-size:12px;font-weight:700;white-space:nowrap;background:rgba(0,0,0,.25)}
+.token.on{background:linear-gradient(#3CE6C8,#1EAF9B);border-color:#E9FFFA;color:#04262A}
 .hud-btns{display:flex;flex-direction:column;gap:8px;pointer-events:auto}
-.hud-btn{font:inherit;font-size:14px;font-weight:700;color:var(--white);background:rgba(7,19,81,.86);border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:8px 12px;min-height:40px;min-width:40px;cursor:pointer}
+.hud-btn{font:inherit;font-size:14px;font-weight:700;color:var(--white);background:linear-gradient(#0B1C6E,#071351);border:3px solid #FFFFFF;box-shadow:0 4px 0 #000;border-radius:6px;padding:6px 12px;min-height:40px;min-width:40px;cursor:pointer}
+.hud-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #000}
+
+/* Level banner */
+#banner{position:absolute;left:50%;top:32%;transform:translate(-50%,-50%);z-index:7;pointer-events:none;text-align:center;font-family:var(--pixel);text-transform:uppercase}
+#banner .b-world{display:block;font-size:clamp(14px,2.6vw,20px);font-weight:700;color:#FFF6B0;letter-spacing:.2em;text-shadow:3px 3px 0 #000}
+#banner .b-name{display:block;font-size:clamp(26px,6vw,46px);font-weight:700;color:#FFFFFF;text-shadow:0 4px 0 #071351,0 6px 0 #000,0 0 18px rgba(126,222,252,.7);letter-spacing:.04em}
+#banner.in{animation:bannerIn 2.2s ease-out both}
+@keyframes bannerIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}22%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+body.rm #banner.in{animation:none}
 
 /* Prompt */
-#prompt{position:absolute;left:50%;top:110px;transform:translateX(-50%);background:rgba(7,19,81,.9);border:1px solid rgba(255,255,255,.3);padding:8px 14px;border-radius:12px;font-size:15px;font-weight:600;max-width:calc(100% - 28px);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;z-index:6}
+#prompt{position:absolute;left:50%;top:118px;transform:translateX(-50%);background:linear-gradient(#0B1C6E,#071351);border:3px solid #FFFFFF;box-shadow:0 4px 0 #000;padding:8px 14px;border-radius:6px;font-size:15px;font-weight:700;max-width:calc(100% - 28px);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;z-index:6}
 #prompt.show{opacity:1}
 #prompt.action{pointer-events:auto;cursor:pointer;border-color:var(--teal-2)}
 
@@ -46,45 +56,46 @@ canvas:focus-visible{box-shadow:inset 0 0 0 3px var(--focus)}
 #touch{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;padding:10px 12px calc(10px + env(safe-area-inset-bottom));pointer-events:none;z-index:5}
 body.touch.playing #touch{display:flex}
 #touch .pad{display:flex;gap:10px}
-#touch button{pointer-events:auto;touch-action:none;width:84px;height:70px;border-radius:16px;border:2px solid rgba(255,255,255,.7);background:rgba(7,19,81,.7);color:#fff;font:inherit;font-weight:700;font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;user-select:none;-webkit-user-select:none}
+#touch button{pointer-events:auto;touch-action:none;width:84px;height:70px;border-radius:12px;border:3px solid #FFFFFF;box-shadow:0 5px 0 #000;background:linear-gradient(#1F64C5,#071351);color:#fff;font:inherit;font-weight:700;font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;user-select:none;-webkit-user-select:none}
 #touch button span{font-size:12px;font-weight:700}
-#touch button.active{background:rgba(31,100,197,.95);border-color:var(--sky)}
+#touch button.active{transform:translateY(3px);box-shadow:0 2px 0 #000;background:linear-gradient(#357DE4,#152E7C)}
 #touch button.jump{width:96px}
 
 /* Station dialog */
-#dialog{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(520px,calc(100% - 28px));background:var(--white);color:var(--navy);border-radius:16px;padding:16px 20px 18px;box-shadow:0 12px 32px rgba(0,0,0,.4);z-index:12;border-top:6px solid var(--teal)}
-#dialog .kicker{margin:0 0 2px;font-size:13px;font-weight:700;color:var(--blue-3);text-transform:uppercase;letter-spacing:.06em}
+#dialog{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(520px,calc(100% - 28px));background:#FFFFFF;color:var(--navy);border-radius:10px;padding:16px 20px 18px;box-shadow:0 0 0 4px #071351,0 0 0 7px #F3AB39,0 12px 30px rgba(0,0,0,.45);z-index:12}
+#dialog .kicker{margin:0 0 2px;font-size:12px;font-weight:700;color:var(--blue-3);text-transform:uppercase;letter-spacing:.08em}
 #dialog h2{font-size:24px;margin:0 0 6px;color:var(--navy)}
 #dialog p{margin:0 0 12px;line-height:1.45;font-size:16px}
 #dialog .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
 
 /* Screens */
-.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(7,19,81,.78);z-index:10;overflow:auto}
-.card{width:min(580px,100%);background:var(--navy);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:26px 24px;box-shadow:0 20px 50px rgba(0,0,0,.4);margin:auto}
-.eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-2);margin:0 0 6px}
-h1,h2{font-family:var(--head);font-weight:700;line-height:1.15;margin:0 0 10px}
-h1{font-size:clamp(26px,5.2vw,38px)}
-h2{font-size:clamp(22px,4.2vw,28px)}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:radial-gradient(ellipse at center,rgba(7,19,81,.55),rgba(7,19,81,.88));z-index:10;overflow:auto}
+.card{width:min(580px,100%);background:linear-gradient(#0E2284,#071351);border:3px solid #FFFFFF;border-radius:10px;padding:26px 24px;box-shadow:0 0 0 4px #071351,0 0 0 6px #7EDEFC,0 20px 50px rgba(0,0,0,.5);margin:auto}
+.eyebrow{font-family:var(--pixel);font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-2);margin:0 0 8px;text-shadow:2px 2px 0 #000}
+h1,h2{font-weight:800;line-height:1.1;margin:0 0 10px}
+h1{font-size:clamp(28px,5.6vw,44px);color:#FFF6B0;text-shadow:0 4px 0 #B86E12,0 6px 0 #071351,0 8px 0 #000;letter-spacing:.01em}
+h2{font-size:clamp(22px,4.2vw,30px);text-shadow:0 3px 0 #000}
 h2:focus{outline:none}
 p{line-height:1.5;margin:0 0 12px;font-size:16px}
 .lead{font-size:18px}
 .fine{font-size:13px;opacity:.85;margin-top:14px}
 .list{margin:0 0 12px;padding-left:20px;line-height:1.6;font-size:16px}
-.stack{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.stack{display:flex;flex-direction:column;gap:12px;margin-top:18px}
 .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-.btn{font:inherit;font-weight:700;font-size:16px;color:var(--navy);background:var(--white);border:0;border-radius:12px;padding:12px 18px;min-height:48px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.28);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center;line-height:1.25}
-.btn:hover{filter:brightness(1.05)}
-.btn:active{transform:translateY(1px)}
-.btn.primary{background:var(--teal-2)}
-.btn.ghost{background:transparent;color:var(--white);box-shadow:inset 0 0 0 2px rgba(255,255,255,.75)}
+.btn{font:inherit;font-weight:800;font-size:16px;color:var(--navy);background:linear-gradient(#FFFFFF,#D9E6FF);border:3px solid #071351;border-radius:8px;padding:12px 18px;min-height:48px;cursor:pointer;box-shadow:0 5px 0 #071351,0 0 0 2px #FFFFFF inset;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center;line-height:1.25;transition:transform .05s}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #071351}
+.btn.primary{background:linear-gradient(#FFF3A8,#F3AB39);color:#3A2100;box-shadow:0 5px 0 #7A4305}
+.btn.primary:active{box-shadow:0 2px 0 #7A4305}
+.btn.ghost{background:linear-gradient(#1F64C5,#152E7C);color:#FFFFFF;border-color:#FFFFFF;box-shadow:0 5px 0 #000}
 .btn.small{min-height:40px;font-size:14px;padding:8px 14px}
 .btn:focus-visible,.hud-btn:focus-visible,#touch button:focus-visible,#dialog button:focus-visible,#dialog a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
-#dialog a.btn{background:var(--navy);color:var(--white);min-height:44px}
+#dialog a.btn{background:linear-gradient(#1F64C5,#152E7C);color:#FFFFFF;min-height:44px;box-shadow:0 4px 0 #000}
 #dialog a.btn:focus-visible{outline-color:var(--gold)}
 @media (max-width:480px){
   #hud{flex-direction:column;align-items:stretch}
   .chip{max-width:none;font-size:13px;padding:6px 10px}
-  #hud-tokens .token{font-size:12px;padding:1px 7px}
+  #hud-tokens .token{font-size:11px;padding:1px 6px}
   .hud-btns{flex-direction:row;justify-content:flex-end}
   #prompt{top:auto;bottom:118px}
   body.touch.playing #prompt{bottom:150px}
@@ -98,16 +109,21 @@ p{line-height:1.5;margin:0 0 12px;font-size:16px}
 
   <header id="hud" hidden>
     <div class="chip">
-      <div id="hud-level" class="hud-line"></div>
+      <div id="hud-level" class="hud-top"></div>
       <div class="bar" aria-hidden="true"><div id="hud-bar"></div></div>
+      <div class="hud-row"><span class="coin" aria-hidden="true"></span><span id="hud-sparks"></span></div>
       <div id="hud-tokens" class="tokens" aria-label="Chapter tokens"></div>
-      <div id="hud-sparks" class="hud-line small"></div>
     </div>
     <div class="hud-btns">
       <button class="hud-btn toggle-sound" type="button">Sound: Off</button>
       <button id="btn-pause" class="hud-btn" type="button">Pause</button>
     </div>
   </header>
+
+  <div id="banner" aria-hidden="true" hidden>
+    <span class="b-world" id="banner-world"></span>
+    <span class="b-name" id="banner-name"></span>
+  </div>
 
   <div id="prompt" role="status" aria-live="polite"></div>
 
@@ -218,9 +234,9 @@ p{line-height:1.5;margin:0 0 12px;font-size:16px}
 'use strict';
 
 /* ============================================================
-   Constants
+   Physics constants
    ============================================================ */
-const PW = 22, PH = 30;              // player box
+const PW = 22, PH = 30;              // player hitbox
 const GRAV = 1750, MAX_FALL = 920;
 const JUMP_V = -610, JUMP_CUT_V = -210;
 const MAX_RUN = 250, ACC_G = 2100, ACC_A = 1400, FRICT = 2400;
@@ -229,12 +245,74 @@ const WORLD_H = 540, FALL_Y = WORLD_H + 140;
 const BASE_W = 640, BASE_H = 400;    // minimum logical view; bigger screens show more world
 
 /* ============================================================
-   Level data. Coordinates: platforms [x, y, w, h]; spawn/checkpoints/stations use
-   the standing surface y. Sparks use their centre point.
+   Themes: one look per world
+   ============================================================ */
+const THEMES = {
+  meadow: {
+    name: 'Meadow',
+    sky: ['#1E7FD6', '#6CCBFF', '#D7F5FF'],
+    sun: '#FFE58A', sunGlow: 'rgba(255,240,170,0.45)',
+    far: '#8ED8C6', mid: '#4DB879', near: '#2F9456', cloud: '#FFFFFF',
+    outline: '#0B2E4A', island: '#7A4A22', islandTop: '#6FD04A',
+    body: ['dirt', ['#C98A4B', '#8A552A', '#E7AD6B']],
+    top: ['grass', ['#8BE04A', '#4FB52E', '#2D7D1E']],
+    block: ['brick', ['#EE9A45', '#8E4316', '#FFD08A']],
+    mover: '#FFC94D', moverDark: '#B8861E', flag: '#FFD84D', stone: '#8E4316'
+  },
+  grove: {
+    name: 'Guidebook Grove',
+    sky: ['#0F5C57', '#2E9C85', '#A9E9C6'],
+    sun: '#E9FFD0', sunGlow: 'rgba(220,255,200,0.3)',
+    far: '#2A7A6C', mid: '#1D5E55', near: '#15443F', cloud: '#CFF5E4',
+    outline: '#0A2A26', island: '#4B3320', islandTop: '#7BD15A',
+    body: ['planks', ['#8A5A36', '#5E3A20', '#B17B4C']],
+    top: ['grass', ['#7FD15A', '#3F9A3A', '#23652A']],
+    block: ['planks', ['#B9793F', '#6F4220', '#E0A162']],
+    mover: '#C9A36A', moverDark: '#7A5A2E', flag: '#F6E27A', stone: '#6F4220'
+  },
+  ridge: {
+    name: 'Release Ridge',
+    sky: ['#3B2A6E', '#E0708A', '#FFC48A'],
+    sun: '#FFD79A', sunGlow: 'rgba(255,190,140,0.4)',
+    far: '#8E5CA0', mid: '#5C4A8C', near: '#3A3566', cloud: '#FFB6A0',
+    outline: '#1E1838', island: '#4A5470', islandTop: '#B7C4DC',
+    body: ['stone', ['#6E7C96', '#4A556E', '#9AA8C0']],
+    top: ['strip', ['#D4DCEB', '#9AA8C0']],
+    block: ['stone', ['#8F9BB4', '#5A6684', '#C5CEE0']],
+    mover: '#6FE0D0', moverDark: '#2E8F86', flag: '#7FF0E0', stone: '#5A6684'
+  },
+  cove: {
+    name: 'Connection Cove',
+    sky: ['#2C6FB8', '#FF9F6B', '#FFE3A3'],
+    sun: '#FFF0B0', sunGlow: 'rgba(255,230,160,0.45)',
+    far: '#E98C74', mid: '#B9674F', near: '#7A3F3F', cloud: '#FFE0C2',
+    outline: '#3A1E24', island: '#B98A52', islandTop: '#F4D28A',
+    sea: ['#2B9BDD', '#17649E'],
+    body: ['planks', ['#A96B37', '#6B3F1E', '#CD8D52']],
+    top: ['strip', ['#F7D08A', '#D89A4E']],
+    block: ['planks', ['#D8954F', '#7A4A22', '#F4BD7A']],
+    mover: '#E7A95A', moverDark: '#9A6026', flag: '#FFE58A', stone: '#7A4A22'
+  },
+  lighthouse: {
+    name: 'Learning Lighthouse',
+    sky: ['#050B26', '#14246B', '#2D4F9E'],
+    sun: '#E8F4FF', sunGlow: 'rgba(200,230,255,0.25)',
+    far: '#1B2C5E', mid: '#14224C', near: '#0C1737', cloud: '#2A3D7A',
+    outline: '#050B1E', island: '#2D3C68', islandTop: '#7EDEFC',
+    body: ['panel', ['#3C4F80', '#1E2B52', '#7EDEFC']],
+    top: ['strip', ['#7EDEFC', '#2F8FB8']],
+    block: ['stone', ['#5A6FA0', '#2E3D6B', '#9CB4E6']],
+    mover: '#7EDEFC', moverDark: '#2F8FB8', flag: '#7EDEFC', stone: '#2E3D6B'
+  }
+};
+
+/* ============================================================
+   Level data. Platforms [x, y, w, h]; spawn / checkpoints / stations use the
+   standing surface y. Sparks use their centre point.
    ============================================================ */
 const LEVELS = [
   {
-    name: 'Home Hub', token: 'Find', width: 2000, spawn: [60, 440], accent: '#1F64C5',
+    name: 'Home Hub', token: 'Find', theme: 'meadow', width: 2000, spawn: [60, 440],
     intro: 'Welcome to the Community Network. Reach Community Home and press E.',
     chapter: 'Community Home is where you start: a route to useful information and high-interest destinations.',
     platforms: [
@@ -253,7 +331,7 @@ const LEVELS = [
     gate: { x: 1900, y: 440 }
   },
   {
-    name: 'Guidebook Grove', token: 'Learn', width: 2300, spawn: [60, 440], accent: '#0251B3',
+    name: 'Guidebook Grove', token: 'Learn', theme: 'grove', width: 2300, spawn: [60, 440],
     intro: 'Cross the gap, then light the Product Guides station.',
     chapter: 'Product Guides and the Knowledge Base help you find instructions. Known Issues help you check what is already reported.',
     platforms: [
@@ -276,7 +354,7 @@ const LEVELS = [
     gate: { x: 2200, y: 440 }
   },
   {
-    name: 'Release Ridge', token: 'Explore', width: 2300, spawn: [60, 440], accent: '#1B5AA8',
+    name: 'Release Ridge', token: 'Explore', theme: 'ridge', width: 2300, spawn: [60, 440],
     intro: 'Ride the lift up the ridge, then light the Release Center beacon.',
     chapter: 'The Release Center brings release information and testing resources together. Ideas and Roadmap help you follow product topics. Roadmap items are not delivery promises.',
     platforms: [
@@ -299,7 +377,7 @@ const LEVELS = [
     gate: { x: 2220, y: 440 }
   },
   {
-    name: 'Connection Cove', token: 'Connect', width: 2000, spawn: [60, 440], accent: '#0B4F8F',
+    name: 'Connection Cove', token: 'Connect', theme: 'cove', width: 2000, spawn: [60, 440],
     intro: 'Light all three nodes to form a bridge across the cove.',
     chapter: 'Discussions, User Groups, and Directories help you ask, answer, exchange practices, and find people and products.',
     platforms: [
@@ -325,7 +403,7 @@ const LEVELS = [
     gate: { x: 1880, y: 440 }
   },
   {
-    name: 'Learning Lighthouse', token: 'Contribute', width: 2300, spawn: [60, 440], accent: '#0A3F86',
+    name: 'Learning Lighthouse', token: 'Contribute', theme: 'lighthouse', width: 2300, spawn: [60, 440],
     intro: 'Time the event platforms, then light the lighthouse to finish the network.',
     chapter: 'Events, webinars, recordings, resources, and news help you keep learning. Share your questions and ideas to join the conversation.',
     platforms: [
@@ -364,8 +442,9 @@ const motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-moti
 
 let seed = 7;
 const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-const STARS = Array.from({ length: 90 }, () => ({
-  x: rnd(), y: rnd() * 0.9, r: rnd() < 0.2 ? 2 : 1, a: 0.35 + rnd() * 0.5, p: rnd() * 6.28
+const hash = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+const STARS = Array.from({ length: 110 }, () => ({
+  x: rnd(), y: rnd() * 0.85, r: rnd() < 0.2 ? 2 : 1, a: 0.35 + rnd() * 0.6, p: rnd() * 6.28
 }));
 
 function makeProgress() {
@@ -382,18 +461,141 @@ const state = Object.assign({
   screen: 'title', howtoFrom: 'title', levelIdx: 0,
   dialog: null, near: null, gateNear: false,
   reducedMotion: motionQuery ? motionQuery.matches : false,
-  soundOn: false, time: 0, flash: null, promptKey: '', completed: false
+  soundOn: false, time: 0, flash: null, promptKey: '', completed: false, bannerUntil: 0
 }, makeProgress());
 
 const input = { left: false, right: false, jumpHeld: false, jumpPressed: false };
 
 // Current level runtime
-let L = null;
+let L = null, T = null, THEME_KEY = 'meadow';
 let solidsStatic = [], movers = [], bridgeSolid = null, gateRect = null, decor = [];
 let player = null, respawn = [0, 0], particles = [];
 const cam = { x: 0, y: 0 };
 let camSnap = true;
 let S = 1, DPR = 1, cssW = 0, cssH = 0;
+
+/* ============================================================
+   Pixel-art tile textures (painted once, reused as patterns)
+   ============================================================ */
+const TEX = {};   // TEX[themeKey] = { body, top, block, topH }
+
+function tileCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return c;
+}
+
+function seededRng(s) {
+  let v = s >>> 0 || 1;
+  return () => { v ^= v << 13; v >>>= 0; v ^= v >>> 17; v ^= v << 5; v >>>= 0; return (v % 10000) / 10000; };
+}
+
+function paintDirt(c, pal, r) {
+  const x = c.getContext('2d');
+  x.fillStyle = pal[0]; x.fillRect(0, 0, 16, 16);
+  for (let i = 0; i < 26; i++) {
+    x.fillStyle = r() < 0.5 ? pal[1] : pal[2];
+    x.fillRect(Math.floor(r() * 15), Math.floor(r() * 15), r() < 0.25 ? 2 : 1, 1);
+  }
+}
+
+function paintBrick(c, pal) {
+  const x = c.getContext('2d');
+  x.fillStyle = pal[0]; x.fillRect(0, 0, 16, 16);
+  for (let row = 0; row < 4; row++) {
+    const y = row * 4, off = (row % 2) * 4;
+    x.fillStyle = pal[2];
+    for (let k = 0; k < 2; k++) x.fillRect((off + k * 8 + 1) % 16, y + 1, 5, 1);
+    x.fillStyle = pal[1];
+    x.fillRect(0, y + 3, 16, 1);
+    for (let k = 0; k < 2; k++) x.fillRect((off + k * 8) % 16, y, 1, 4);
+  }
+  x.fillStyle = pal[1];
+  x.fillRect(0, 0, 16, 1); x.fillRect(0, 15, 16, 1);
+}
+
+function paintPlanks(c, pal) {
+  const x = c.getContext('2d');
+  for (let row = 0; row < 4; row++) {
+    const y = row * 4;
+    x.fillStyle = row % 2 ? pal[0] : pal[0];
+    x.fillRect(0, y, 16, 4);
+    x.fillStyle = pal[1];
+    x.fillRect(0, y + 3, 16, 1);
+    x.fillStyle = pal[2];
+    x.fillRect(0, y + 1, 16, 1);
+    x.fillRect(2, y + 1, 1, 1); x.fillRect(13, y + 1, 1, 1);
+  }
+  x.fillStyle = pal[1];
+  x.fillRect(7, 0, 1, 16);
+}
+
+function paintStone(c, pal) {
+  const x = c.getContext('2d');
+  x.fillStyle = pal[0]; x.fillRect(0, 0, 16, 16);
+  x.fillStyle = pal[1];
+  x.fillRect(0, 7, 16, 1); x.fillRect(0, 15, 16, 1);
+  x.fillRect(5, 0, 1, 7); x.fillRect(11, 8, 1, 7);
+  x.fillStyle = pal[2];
+  x.fillRect(1, 1, 3, 1); x.fillRect(7, 9, 3, 1); x.fillRect(1, 9, 2, 1); x.fillRect(12, 1, 2, 1);
+}
+
+function paintPanel(c, pal) {
+  const x = c.getContext('2d');
+  x.fillStyle = pal[0]; x.fillRect(0, 0, 16, 16);
+  x.fillStyle = pal[1];
+  x.fillRect(0, 0, 16, 1); x.fillRect(0, 15, 16, 1); x.fillRect(0, 0, 1, 16); x.fillRect(15, 0, 1, 16);
+  x.fillStyle = pal[2];
+  x.fillRect(4, 7, 8, 2);
+  x.fillRect(7, 4, 2, 8);
+}
+
+function paintGrass(c, pal, r) {
+  const x = c.getContext('2d');
+  x.clearRect(0, 0, 16, 8);
+  x.fillStyle = pal[0]; x.fillRect(0, 0, 16, 3);
+  x.fillStyle = pal[1]; x.fillRect(0, 3, 16, 1);
+  for (let col = 0; col < 16; col++) {
+    const d = 1 + Math.floor(r() * 3);
+    x.fillStyle = col % 3 === 0 ? pal[2] : pal[1];
+    x.fillRect(col, 4, 1, d);
+  }
+}
+
+function paintStrip(c, pal) {
+  const x = c.getContext('2d');
+  x.fillStyle = pal[0]; x.fillRect(0, 0, 16, 6);
+  x.fillStyle = pal[1]; x.fillRect(0, 5, 16, 1);
+  x.fillStyle = '#FFFFFF'; x.globalAlpha = 0.35; x.fillRect(0, 0, 16, 1); x.globalAlpha = 1;
+}
+
+function makeTex(kind, pal, r, h) {
+  const c = tileCanvas(16, h || 16);
+  if (kind === 'dirt') paintDirt(c, pal, r);
+  else if (kind === 'brick') paintBrick(c, pal);
+  else if (kind === 'planks') paintPlanks(c, pal);
+  else if (kind === 'stone') paintStone(c, pal);
+  else if (kind === 'panel') paintPanel(c, pal);
+  else if (kind === 'grass') paintGrass(c, pal, r);
+  else if (kind === 'strip') paintStrip(c, pal);
+  return c;
+}
+
+function buildTextures() {
+  for (const key in THEMES) {
+    const th = THEMES[key];
+    const r = seededRng(key.length * 977 + 13);
+    const body = makeTex(th.body[0], th.body[1], r);
+    const top = makeTex(th.top[0], th.top[1], r, th.top[0] === 'grass' ? 8 : 6);
+    const block = makeTex(th.block[0], th.block[1], r);
+    TEX[key] = {
+      body: ctx.createPattern(body, 'repeat'),
+      top: ctx.createPattern(top, 'repeat'),
+      block: ctx.createPattern(block, 'repeat'),
+      topH: th.top[0] === 'grass' ? 8 : 6
+    };
+  }
+}
 
 /* ============================================================
    Level setup
@@ -417,6 +619,8 @@ function placeAtRespawn() {
 function loadLevel(i, quiet) {
   state.levelIdx = i;
   L = LEVELS[i];
+  THEME_KEY = L.theme;
+  T = THEMES[THEME_KEY];
   movers = L.movers.map(m => ({
     x: m.x, y: m.y, w: m.w, h: m.h, bx: m.x, by: m.y,
     dx: m.dx || 0, dy: m.dy || 0, period: m.period, t: 0, px: m.x, py: m.y
@@ -432,7 +636,21 @@ function loadLevel(i, quiet) {
   $('dialog').hidden = true;
   camSnap = true;
   refreshHud();
-  if (!quiet) showPrompt(L.intro, false, 5200);
+  if (!quiet) {
+    showBanner(`World ${i + 1}`, L.name);
+    showPrompt(L.intro, false, 5200);
+  }
+}
+
+function showBanner(world, name) {
+  $('banner-world').textContent = world;
+  $('banner-name').textContent = name;
+  const b = $('banner');
+  b.hidden = false;
+  b.classList.remove('in');
+  void b.offsetWidth;   // restart the animation
+  b.classList.add('in');
+  state.bannerUntil = state.time + 2.2;
 }
 
 function resetProgress() {
@@ -458,6 +676,7 @@ function show(name) {
   state.screen = name;
   for (const k in screens) screens[k].hidden = (k !== name);
   $('hud').hidden = (name !== 'play');
+  if (name !== 'play') $('banner').hidden = true;
   document.body.classList.toggle('playing', name === 'play');
   if (name !== 'play') clearInput();
   updateToggleLabels();
@@ -538,11 +757,12 @@ function activateStation(st) {
   const was = !!state.lit[st.id];
   if (!was) {
     state.lit[st.id] = true;
-    burst(st.x, st.y - 40, '#29DBBE');
+    burst(st.x, st.y - 40, '#29DBBE', 'star');
     sfx('light');
     if (st.required && allRequiredLit() && !state.tokens[state.levelIdx]) {
       state.tokens[state.levelIdx] = true;
       sfx('gate');
+      burst(st.x, st.y - 60, '#FFD84D', 'star');
       showPrompt(`${L.token} token collected. The gate is open.`, false, 3500);
     }
   }
@@ -620,10 +840,10 @@ function renderTokenChips(el) {
 
 function refreshHud() {
   if (!L) return;
-  $('hud-level').textContent = `Level ${state.levelIdx + 1} of ${LEVELS.length} · ${L.name}`;
+  $('hud-level').textContent = `World ${state.levelIdx + 1}-1 · ${L.name}`;
   const total = LEVELS.reduce((a, l) => a + l.sparks.length, 0);
   const got = state.sparks.reduce((a, arr) => a + arr.filter(Boolean).length, 0);
-  $('hud-sparks').textContent = `Insight Sparks ${got} of ${total} (optional)`;
+  $('hud-sparks').textContent = `x ${String(got).padStart(2, '0')} / ${total} Insight Sparks`;
   renderTokenChips($('hud-tokens'));
   const earned = state.tokens.filter(Boolean).length;
   $('hud-bar').style.width = (earned / LEVELS.length * 100) + '%';
@@ -641,6 +861,7 @@ function updateToggleLabels() {
     b.textContent = `Reduced motion: ${state.reducedMotion ? 'On' : 'Off'}`;
     b.setAttribute('aria-pressed', String(state.reducedMotion));
   });
+  document.body.classList.toggle('rm', state.reducedMotion);
 }
 
 function toggleSound() {
@@ -682,12 +903,12 @@ function tone(freq, dur, type, vol, delay) {
 }
 
 const SFX = {
-  jump: () => tone(520, 0.08, 'triangle', 0.04),
-  spark: () => { tone(880, 0.08, 'sine', 0.05); tone(1320, 0.1, 'sine', 0.04, 0.05); },
-  light: () => [523, 659, 784, 988].forEach((f, i) => tone(f, 0.16, 'triangle', 0.05, i * 0.09)),
-  gate: () => [392, 494, 587, 784].forEach((f, i) => tone(f, 0.22, 'sine', 0.05, i * 0.1)),
-  fall: () => tone(220, 0.25, 'sawtooth', 0.025),
-  check: () => tone(700, 0.1, 'sine', 0.04)
+  jump: () => tone(480, 0.09, 'square', 0.025),
+  spark: () => { tone(988, 0.07, 'square', 0.035); tone(1319, 0.1, 'square', 0.03, 0.06); },
+  light: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.16, 'square', 0.035, i * 0.09)),
+  gate: () => [392, 494, 587, 784, 988].forEach((f, i) => tone(f, 0.2, 'square', 0.035, i * 0.09)),
+  fall: () => tone(220, 0.3, 'sawtooth', 0.025),
+  check: () => tone(700, 0.1, 'square', 0.03)
 };
 function sfx(name) { if (SFX[name]) SFX[name](); }
 
@@ -778,7 +999,7 @@ function updatePlayer(dt) {
   if (p.onGround) { p.coyote = COYOTE; p.jumping = false; }
   else p.coyote -= dt;
 
-  p.anim += dt * (p.onGround ? Math.abs(p.vx) / 30 : 0.5);
+  p.anim += dt * (p.onGround ? Math.abs(p.vx) / 30 : 0);
 
   // Checkpoints
   const li = state.levelIdx;
@@ -788,6 +1009,7 @@ function updatePlayer(dt) {
       state.cps[li][k] = true;
       respawn = c.slice();
       sfx('check');
+      burst(c[0], c[1] - 40, '#FFF6B0', 'star');
       showPrompt('Checkpoint saved.', false, 1800);
     }
   }
@@ -799,7 +1021,7 @@ function updatePlayer(dt) {
     if (sx > p.x - 6 && sx < p.x + PW + 6 && sy > p.y - 6 && sy < p.y + PH + 6) {
       state.sparks[li][k] = true;
       sfx('spark');
-      burst(sx, sy, '#F3AB39');
+      burst(sx, sy, '#FFD23F', 'spark');
       refreshHud();
     }
   }
@@ -835,11 +1057,12 @@ function step(dt) {
 /* ============================================================
    Effects and camera
    ============================================================ */
-function burst(x, y, color) {
+function burst(x, y, color, kind) {
   if (state.reducedMotion) return;
-  for (let i = 0; i < 10; i++) {
-    const a = Math.random() * Math.PI * 2, s = 60 + Math.random() * 120;
-    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: 0.6, max: 0.6, color });
+  const n = kind === 'star' ? 12 : 9;
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = 60 + Math.random() * 130;
+    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 70, life: 0.7, max: 0.7, color, kind: kind || 'dot' });
   }
 }
 
@@ -870,10 +1093,10 @@ function updateCamera(dt) {
 }
 
 /* ============================================================
-   Drawing
+   Drawing helpers
    ============================================================ */
 function roundRect(x, y, w, h, r) {
-  r = Math.min(r, w / 2, h / 2);
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -883,10 +1106,228 @@ function roundRect(x, y, w, h, r) {
   ctx.closePath();
 }
 
-function drawDecor() {
+// Screen-space parallax: f = 0 is fixed to the screen, 1 moves with the world
+function parallaxOff(f) { return cam.x * S * f; }
+
+function ridgeLayer(base, amp, f, a, b, color) {
+  const off = parallaxOff(f);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, cssH);
+  for (let px = 0; px <= cssW + 12; px += 12) {
+    const u = px + off;
+    const y = base - amp * (0.6 * Math.sin(u * 0.0031 + a) + 0.4 * Math.sin(u * 0.0083 + b));
+    ctx.lineTo(px, y);
+  }
+  ctx.lineTo(cssW, cssH);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function cloud(x, y, s, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, 18 * s, 0, Math.PI * 2);
+  ctx.arc(x + 22 * s, y - 8 * s, 24 * s, 0, Math.PI * 2);
+  ctx.arc(x + 46 * s, y, 18 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(x - 18 * s, y, 82 * s, 18 * s);
+}
+
+function cloudRow(y, f, spacing, s, color, t, speed) {
+  const span = cssW + spacing * 2;
+  const off = parallaxOff(f) + t * speed;
+  for (let k = 0; k < 8; k++) {
+    let x = ((k * spacing - off) % span + span) % span - spacing;
+    cloud(x, y + hash(k) * 30, s * (0.8 + hash(k + 9) * 0.5), color);
+  }
+}
+
+function treeRow(base, f, sp, hMin, hRange, color, trunk) {
+  const off = parallaxOff(f);
+  const k0 = Math.floor(off / sp);
+  for (let k = k0; k <= k0 + cssW / sp + 2; k++) {
+    const x = k * sp - off;
+    const h = hMin + hash(k) * hRange;
+    const w = h * 0.55;
+    ctx.fillStyle = trunk;
+    ctx.fillRect(x - 3, base - h * 0.35, 6, h * 0.35);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, base - h * 0.6, w * 0.6, 0, Math.PI * 2);
+    ctx.arc(x - w * 0.35, base - h * 0.38, w * 0.45, 0, Math.PI * 2);
+    ctx.arc(x + w * 0.35, base - h * 0.38, w * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function pineRow(base, f, sp, hMin, hRange, color) {
+  const off = parallaxOff(f);
+  const k0 = Math.floor(off / sp);
+  ctx.fillStyle = color;
+  for (let k = k0; k <= k0 + cssW / sp + 2; k++) {
+    const x = k * sp - off, h = hMin + hash(k + 40) * hRange, w = h * 0.4;
+    ctx.beginPath();
+    ctx.moveTo(x, base - h);
+    ctx.lineTo(x + w / 2, base - h * 0.45);
+    ctx.lineTo(x - w / 2, base - h * 0.45);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x, base - h * 0.7);
+    ctx.lineTo(x + w * 0.7, base - h * 0.15);
+    ctx.lineTo(x - w * 0.7, base - h * 0.15);
+    ctx.closePath(); ctx.fill();
+    ctx.fillRect(x - 2, base - h * 0.15, 4, h * 0.15);
+  }
+}
+
+function palmRow(base, f, sp, color) {
+  const off = parallaxOff(f);
+  const k0 = Math.floor(off / sp);
+  for (let k = k0; k <= k0 + cssW / sp + 2; k++) {
+    const x = k * sp - off, h = 90 + hash(k + 7) * 40, lean = (hash(k + 3) - 0.5) * 30;
+    ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, base); ctx.quadraticCurveTo(x + lean * 0.2, base - h * 0.6, x + lean, base - h); ctx.stroke();
+    ctx.fillStyle = color;
+    for (let a = 0; a < 5; a++) {
+      const ang = -Math.PI / 2 + (a - 2) * 0.55 + Math.sin(a) * 0.08;
+      ctx.save();
+      ctx.translate(x + lean, base - h);
+      ctx.rotate(ang);
+      ctx.beginPath(); ctx.ellipse(0, -22, 7, 26, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+/* ============================================================
+   Backdrops (screen space, parallax per layer)
+   ============================================================ */
+function drawSkyGradient() {
+  const g = ctx.createLinearGradient(0, 0, 0, cssH);
+  g.addColorStop(0, T.sky[0]);
+  g.addColorStop(0.55, T.sky[1]);
+  g.addColorStop(1, T.sky[2]);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, cssW, cssH);
+}
+
+function drawSun(x, y, r) {
+  const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r * 3.2);
+  g.addColorStop(0, T.sunGlow);
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x, y, r * 3.2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = T.sun;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawStars(t, alphaMul) {
+  for (const s of STARS) {
+    let x = s.x * cssW - parallaxOff(0.05);
+    x = ((x % cssW) + cssW) % cssW;
+    const a = (state.reducedMotion ? s.a : s.a * (0.6 + 0.4 * Math.sin(t * 2 + s.p))) * alphaMul;
+    ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`;
+    ctx.fillRect(x, s.y * cssH, s.r, s.r);
+  }
+}
+
+function drawBackdrop(t) {
+  drawSkyGradient();
+  const key = THEME_KEY;
+  if (key === 'meadow') {
+    drawSun(cssW * 0.82, cssH * 0.2, 26);
+    cloudRow(cssH * 0.16, 0.2, 360, 1.0, T.cloud, t, 10);
+    ridgeLayer(cssH * 0.66, 40, 0.15, 0.3, 1.9, T.far);
+    ridgeLayer(cssH * 0.72, 30, 0.35, 2.1, 0.4, T.mid);
+    treeRow(cssH * 0.8, 0.6, 180, 36, 26, T.near, '#5A3A1C');
+  } else if (key === 'grove') {
+    drawStars(t, 0.5);
+    ridgeLayer(cssH * 0.58, 70, 0.1, 1.2, 2.5, T.far);
+    treeRow(cssH * 0.74, 0.3, 150, 90, 60, T.mid, '#2F2016');
+    treeRow(cssH * 0.9, 0.7, 210, 110, 60, T.near, '#1E140C');
+    // drifting fireflies
+    for (let i = 0; i < 14; i++) {
+      const fx = ((hash(i * 3.1) * cssW + t * (8 + i % 5) * 4 - parallaxOff(0.25)) % cssW + cssW) % cssW;
+      const fy = cssH * (0.45 + hash(i * 7.3) * 0.35) + Math.sin(t * 1.3 + i) * 14;
+      ctx.fillStyle = `rgba(230,255,160,${0.45 + 0.4 * Math.sin(t * 3 + i)})`;
+      ctx.fillRect(fx, fy, 3, 3);
+    }
+  } else if (key === 'ridge') {
+    drawSun(cssW * 0.5, cssH * 0.55, 46);
+    cloudRow(cssH * 0.3, 0.15, 420, 0.9, T.cloud, t, 6);
+    ridgeLayer(cssH * 0.62, 120, 0.12, 0.5, 2.2, T.far);
+    ridgeLayer(cssH * 0.7, 70, 0.3, 3.0, 1.1, T.mid);
+    pineRow(cssH * 0.84, 0.6, 46, 60, 40, T.near);
+  } else if (key === 'cove') {
+    drawSun(cssW * 0.5, cssH * 0.5, 40);
+    // sea band behind the platforms
+    const seaTop = cssH * 0.56;
+    const sg = ctx.createLinearGradient(0, seaTop, 0, cssH);
+    sg.addColorStop(0, T.sea[0]); sg.addColorStop(1, T.sea[1]);
+    ctx.fillStyle = sg;
+    ctx.fillRect(0, seaTop, cssW, cssH - seaTop);
+    // waves
+    ctx.strokeStyle = 'rgba(158,231,255,0.45)';
+    ctx.lineWidth = 2;
+    for (let row = 0; row < 6; row++) {
+      const y = seaTop + 10 + row * 14;
+      ctx.beginPath();
+      for (let px = 0; px <= cssW + 10; px += 10) {
+        const yy = y + Math.sin((px + t * 60 * (1 + row * 0.2) + parallaxOff(0.4)) * 0.03 + row) * 3;
+        if (px === 0) ctx.moveTo(px, yy); else ctx.lineTo(px, yy);
+      }
+      ctx.stroke();
+    }
+    ridgeLayer(cssH * 0.6, 26, 0.2, 0.9, 2.7, T.far);
+    palmRow(cssH * 0.62, 0.45, 320, T.near);
+    // distant lighthouse beam
+    const lx = cssW * 0.18;
+    const ang = t * 0.9;
+    ctx.fillStyle = 'rgba(255,240,180,0.22)';
+    ctx.beginPath();
+    ctx.moveTo(lx, cssH * 0.42);
+    ctx.lineTo(lx + Math.cos(ang - 0.12) * 500, cssH * 0.42 + Math.sin(ang - 0.12) * 500);
+    ctx.lineTo(lx + Math.cos(ang + 0.12) * 500, cssH * 0.42 + Math.sin(ang + 0.12) * 500);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FFF6E0';
+    ctx.fillRect(lx - 6, cssH * 0.3, 12, cssH * 0.12);
+    ctx.fillStyle = '#E0543C';
+    ctx.fillRect(lx - 7, cssH * 0.3, 14, 5);
+  } else if (key === 'lighthouse') {
+    drawStars(t, 1);
+    // moon
+    const mx = cssW * 0.8, my = cssH * 0.18;
+    const mg = ctx.createRadialGradient(mx, my, 10, mx, my, 90);
+    mg.addColorStop(0, 'rgba(230,242,255,0.35)'); mg.addColorStop(1, 'rgba(230,242,255,0)');
+    ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(mx, my, 90, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#E8F4FF'; ctx.beginPath(); ctx.arc(mx, my, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(5,11,38,0.25)'; ctx.beginPath(); ctx.arc(mx + 7, my - 4, 18, 0, Math.PI * 2); ctx.fill();
+    ridgeLayer(cssH * 0.7, 50, 0.18, 1.1, 0.3, T.far);
+    ridgeLayer(cssH * 0.8, 30, 0.4, 2.4, 1.6, T.mid);
+    // lighthouse towers at parallax
+    const sp = 620, off = parallaxOff(0.5);
+    const k0 = Math.floor(off / sp);
+    for (let k = k0; k <= k0 + cssW / sp + 2; k++) {
+      const x = k * sp - off + 120, base = cssH * 0.8;
+      ctx.fillStyle = '#E8F4FF';
+      ctx.beginPath();
+      ctx.moveTo(x - 16, base); ctx.lineTo(x - 9, base - 130); ctx.lineTo(x + 9, base - 130); ctx.lineTo(x + 16, base);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#E0543C'; ctx.fillRect(x - 12, base - 90, 24, 10);
+      ctx.fillStyle = '#FFE58A';
+      ctx.beginPath(); ctx.arc(x, base - 134, 8, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+}
+
+/* ============================================================
+   World drawing
+   ============================================================ */
+function drawFloatingIslands() {
   ctx.save();
   ctx.setLineDash([3, 7]);
-  ctx.strokeStyle = 'rgba(126,222,252,0.28)';
+  ctx.strokeStyle = 'rgba(126,222,252,0.3)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   decor.forEach((d, k) => {
@@ -895,44 +1336,62 @@ function drawDecor() {
   });
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = 'rgba(126,222,252,0.16)';
   for (const d of decor) {
-    roundRect(d.x, d.y, d.w, 16, 8);
-    ctx.fill();
+    ctx.fillStyle = T.island;
     ctx.beginPath();
-    ctx.moveTo(d.x + d.w * 0.3, d.y + 16);
-    ctx.lineTo(d.x + d.w * 0.5, d.y + 42);
-    ctx.lineTo(d.x + d.w * 0.7, d.y + 16);
-    ctx.fill();
+    ctx.moveTo(d.x + d.w * 0.2, d.y + 16);
+    ctx.lineTo(d.x + d.w * 0.5, d.y + 52);
+    ctx.lineTo(d.x + d.w * 0.8, d.y + 16);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = T.islandTop;
+    roundRect(d.x, d.y, d.w, 14, 7); ctx.fill();
   }
   ctx.restore();
 }
 
 function drawPlatform(r) {
-  ctx.fillStyle = '#152E7C';
-  roundRect(r.x, r.y, r.w, r.h, 6);
-  ctx.fill();
-  ctx.fillStyle = '#DDEBFA';
-  roundRect(r.x, r.y, r.w, 6, 4);
-  ctx.fill();
+  const tx = TEX[THEME_KEY];
+  if (r.h >= 48) {
+    // Solid ground: body texture with a grassy / planked / stone top
+    ctx.fillStyle = tx.body;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.fillStyle = tx.top;
+    ctx.fillRect(r.x, r.y, r.w, tx.topH);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(r.x, r.y + r.h - 10, r.w, 10);
+    ctx.strokeStyle = T.outline;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+  } else {
+    // Floating block: brick / panel texture with a bright top lip
+    ctx.fillStyle = tx.block;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.fillStyle = tx.top;
+    ctx.fillRect(r.x, r.y, r.w, tx.topH);
+    ctx.strokeStyle = T.outline;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+  }
 }
 
 function drawMover(m) {
   ctx.save();
   ctx.setLineDash([4, 6]);
-  ctx.strokeStyle = 'rgba(41,219,190,0.5)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(m.bx + m.w / 2, m.by + m.h / 2);
   ctx.lineTo(m.bx + m.dx + m.w / 2, m.by + m.dy + m.h / 2);
   ctx.stroke();
   ctx.restore();
-  ctx.fillStyle = '#1EAF9B';
-  roundRect(m.x, m.y, m.w, m.h, 6);
-  ctx.fill();
-  ctx.fillStyle = '#29DBBE';
-  roundRect(m.x, m.y, m.w, 5, 3);
-  ctx.fill();
+  ctx.fillStyle = T.mover;
+  roundRect(m.x, m.y, m.w, m.h, 4); ctx.fill();
+  ctx.fillStyle = T.moverDark;
+  ctx.fillRect(m.x, m.y + m.h - 4, m.w, 4);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(m.x + 3, m.y + 2, m.w - 6, 2);
+  ctx.strokeStyle = T.outline; ctx.lineWidth = 2;
+  roundRect(m.x + 1, m.y + 1, m.w - 2, m.h - 2, 4); ctx.stroke();
 }
 
 function drawBridge() {
@@ -941,38 +1400,40 @@ function drawBridge() {
   const a = state.reveal[state.levelIdx];
   if (a < 1) {
     ctx.save();
-    ctx.globalAlpha = 0.45;
+    ctx.globalAlpha = 0.5;
     ctx.setLineDash([6, 6]);
-    ctx.strokeStyle = '#29DBBE';
+    ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 2;
-    roundRect(b.x, b.y, b.w, b.h, 6);
+    roundRect(b.x, b.y, b.w, b.h, 4);
     ctx.stroke();
     ctx.restore();
   }
   if (a > 0) {
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.fillStyle = '#1EAF9B';
-    roundRect(b.x, b.y, b.w, b.h, 6);
-    ctx.fill();
-    ctx.fillStyle = '#29DBBE';
-    roundRect(b.x, b.y, b.w, 5, 3);
-    ctx.fill();
+    ctx.fillStyle = TEX[THEME_KEY].block;
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+    ctx.fillStyle = TEX[THEME_KEY].top;
+    ctx.fillRect(b.x, b.y, b.w, TEX[THEME_KEY].topH);
+    ctx.strokeStyle = T.outline; ctx.lineWidth = 2;
+    ctx.strokeRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2);
     ctx.restore();
   }
 }
 
-function drawCheckpoint(c, reached) {
-  ctx.fillStyle = '#EAF4FF';
-  ctx.fillRect(c[0] - 1.5, c[1] - 46, 3, 46);
-  ctx.fillRect(c[0] - 8, c[1] - 2, 16, 2);
-  ctx.beginPath();
-  ctx.moveTo(c[0] + 1.5, c[1] - 46);
-  ctx.lineTo(c[0] + 18, c[1] - 38);
-  ctx.lineTo(c[0] + 1.5, c[1] - 30);
-  ctx.closePath();
+function drawCheckpoint(c, reached, t) {
+  ctx.fillStyle = T.outline;
+  ctx.fillRect(c[0] - 9, c[1] - 3, 18, 3);
+  ctx.fillStyle = '#E9F1FF';
+  ctx.fillRect(c[0] - 2, c[1] - 52, 4, 50);
+  const wave = state.reducedMotion ? 0 : Math.sin(t * 5 + c[0]) * 2;
   ctx.fillStyle = reached ? '#29DBBE' : '#FFFFFF';
-  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(c[0] + 2, c[1] - 52);
+  ctx.quadraticCurveTo(c[0] + 12, c[1] - 48 + wave, c[0] + 20, c[1] - 42);
+  ctx.lineTo(c[0] + 2, c[1] - 34);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = T.outline; ctx.lineWidth = 1.5; ctx.stroke();
 }
 
 function drawIcon(kind, x, y, r) {
@@ -1026,7 +1487,7 @@ function drawIcon(kind, x, y, r) {
         ctx.strokeRect(x + dx * r * 0.7 - r * 0.3, y + dy * r * 0.7 - r * 0.3, r * 0.6, r * 0.6);
       }
       break;
-    case 'events': // lighthouse
+    case 'events':
       ctx.beginPath();
       ctx.moveTo(x - r * 0.4, y + r * 0.7); ctx.lineTo(x - r * 0.2, y - r * 0.5);
       ctx.lineTo(x + r * 0.2, y - r * 0.5); ctx.lineTo(x + r * 0.4, y + r * 0.7);
@@ -1043,42 +1504,57 @@ function drawIcon(kind, x, y, r) {
   ctx.restore();
 }
 
-function drawStation(st) {
+function drawStation(st, t) {
   const lit = !!state.lit[st.id];
-  const x = st.x, y = st.y, bodyH = 62;
-  ctx.fillStyle = lit ? '#1EAF9B' : '#152E7C';
-  ctx.strokeStyle = lit ? '#29DBBE' : '#FFFFFF';
-  ctx.lineWidth = 2;
-  roundRect(x - 13, y - bodyH, 26, bodyH, 6);
-  ctx.fill(); ctx.stroke();
+  const x = st.x, y = st.y, bodyH = 58;
+  // pedestal in the theme's block texture
+  ctx.fillStyle = TEX[THEME_KEY].block;
+  ctx.fillRect(x - 14, y - bodyH, 28, bodyH);
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillRect(x - 14, y - 10, 28, 10);
+  ctx.strokeStyle = T.outline; ctx.lineWidth = 2;
+  ctx.strokeRect(x - 14, y - bodyH, 28, bodyH);
   ctx.fillStyle = '#EAF4FF';
-  ctx.fillRect(x - 18, y - 6, 36, 6);
-  // medallion with icon
-  ctx.beginPath();
-  ctx.arc(x, y - bodyH - 14, 18, 0, Math.PI * 2);
-  ctx.fillStyle = lit ? '#29DBBE' : '#FFFFFF';
-  ctx.fill();
-  ctx.strokeStyle = '#071351';
-  ctx.stroke();
-  drawIcon(st.kind, x, y - bodyH - 14, 11);
-  // lit check mark (shape, not colour alone)
+  ctx.fillRect(x - 19, y - 6, 38, 6);
+  ctx.strokeRect(x - 19, y - 6, 38, 6);
+  // glowing orb with medallion icon
+  const oy = y - bodyH - 16;
   if (lit) {
-    const cx = x + 16, cy = y - bodyH - 2;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    const g = ctx.createRadialGradient(x, oy, 4, x, oy, 34);
+    g.addColorStop(0, 'rgba(41,219,190,0.7)'); g.addColorStop(1, 'rgba(41,219,190,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, oy, 34, 0, Math.PI * 2); ctx.fill();
+  }
+  const og = ctx.createRadialGradient(x - 5, oy - 6, 2, x, oy, 18);
+  og.addColorStop(0, '#FFFFFF');
+  og.addColorStop(1, lit ? '#1EAF9B' : '#7EDEFC');
+  ctx.fillStyle = og;
+  ctx.beginPath(); ctx.arc(x, oy, 18, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = T.outline; ctx.lineWidth = 2.5; ctx.stroke();
+  drawIcon(st.kind, x, oy, 11);
+  if (lit) {
+    // check badge (shape, not colour alone)
+    const cx = x + 17, cy = oy - 14;
+    ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI * 2);
     ctx.fillStyle = '#071351'; ctx.fill();
+    ctx.strokeStyle = '#FFD84D'; ctx.lineWidth = 2; ctx.stroke();
     ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.moveTo(cx - 4, cy); ctx.lineTo(cx - 1, cy + 3); ctx.lineTo(cx + 4, cy - 3); ctx.stroke();
   }
   // label
-  ctx.font = '700 13px ' + getComputedStyle(document.body).fontFamily;
+  ctx.font = '800 13px ' + getComputedStyle(document.body).fontFamily;
   ctx.textAlign = 'center';
   ctx.lineJoin = 'round';
   ctx.lineWidth = 4;
-  ctx.strokeStyle = 'rgba(7,19,81,0.9)';
-  ctx.strokeText(st.label, x, y - bodyH - 40);
+  ctx.strokeStyle = T.outline;
+  ctx.strokeText(st.label, x, oy - 34);
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText(st.label, x, y - bodyH - 40);
+  ctx.fillText(st.label, x, oy - 34);
+  if (!lit && !state.reducedMotion) {
+    // gentle sparkle to invite a visit
+    const sa = (t * 2 + st.x) % (Math.PI * 2);
+    ctx.fillStyle = `rgba(255,246,176,${(0.5 + 0.5 * Math.sin(sa)).toFixed(2)})`;
+    ctx.fillRect(x + 22 + Math.sin(sa) * 3, oy - 22, 3, 3);
+  }
 }
 
 function archPath(x, y, w, h) {
@@ -1091,125 +1567,173 @@ function archPath(x, y, w, h) {
 }
 
 function drawGate(t) {
-  const gx = L.gate.x, gy = L.gate.y, w = 36, h = 90;
+  const gx = L.gate.x, gy = L.gate.y, w = 44, h = 100;
   const open = allRequiredLit();
   ctx.save();
+  // stone frame
   archPath(gx - w / 2, gy - h, w, h);
+  ctx.fillStyle = TEX[THEME_KEY].block;
+  ctx.fill();
+  ctx.strokeStyle = T.outline; ctx.lineWidth = 2; ctx.stroke();
+  // opening
+  const iw = w - 14, ih = h - 10;
+  archPath(gx - iw / 2, gy - ih - 2, iw, ih);
   if (open) {
-    const gr = ctx.createLinearGradient(0, gy - h, 0, gy);
-    gr.addColorStop(0, '#92EAFF');
-    gr.addColorStop(1, '#1EAF9B');
-    ctx.fillStyle = gr;
+    const pg = ctx.createRadialGradient(gx, gy - ih / 2, 4, gx, gy - ih / 2, ih * 0.7);
+    pg.addColorStop(0, '#FFFFFF');
+    pg.addColorStop(0.35, '#92EAFF');
+    pg.addColorStop(1, '#1EAF9B');
+    ctx.fillStyle = pg;
     ctx.fill();
-    ctx.shadowColor = 'rgba(41,219,190,0.9)';
-    ctx.shadowBlur = state.reducedMotion ? 6 : 12 + 5 * Math.sin(t * 3);
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    if (!state.reducedMotion) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 2; i++) {
+        ctx.beginPath();
+        ctx.ellipse(gx, gy - ih / 2, 6 + i * 6 + Math.sin(t * 4 + i) * 2, 16 + i * 8, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
   } else {
     ctx.fillStyle = '#071351';
     ctx.fill();
-    ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.fillRect(gx - 5, gy - 40, 10, 9);
+    // padlock
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillRect(gx - 7, gy - 46, 14, 11);
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(gx, gy - 46, 5, Math.PI, 0); ctx.stroke();
   }
   ctx.restore();
 }
 
 function drawSpark(x, y, i, t) {
-  const pulse = state.reducedMotion ? 0 : Math.sin(t * 4 + i) * 1.2;
-  const r = 7 + pulse;
+  // spinning coin: squash horizontally as it turns
+  const phase = i * 1.7;
+  const turn = state.reducedMotion ? 1 : Math.abs(Math.cos(t * 3.2 + phase));
+  const rx = Math.max(2, 8 * turn), ry = 9;
+  if (!state.reducedMotion) {
+    const g = ctx.createRadialGradient(x, y, 2, x, y, 16);
+    g.addColorStop(0, 'rgba(255,230,120,0.5)'); g.addColorStop(1, 'rgba(255,230,120,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI * 2); ctx.fill();
+  }
   ctx.beginPath();
-  ctx.moveTo(x, y - r);
-  ctx.lineTo(x + r * 0.7, y);
-  ctx.lineTo(x, y + r);
-  ctx.lineTo(x - r * 0.7, y);
-  ctx.closePath();
-  ctx.fillStyle = '#F3AB39';
-  ctx.fill();
-  ctx.strokeStyle = '#7EDEFC';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(x - 1, y - 1, 2, 2);
-}
-
-function drawPlayer() {
-  const p = player;
-  const swing = p.onGround && !state.reducedMotion ? Math.sin(p.anim) * 3 : 0;
-  ctx.save();
-  ctx.translate(p.x + PW / 2, p.y + PH / 2);
-  ctx.scale(p.face >= 0 ? 1 : -1, 1);
-  // backpack
-  ctx.fillStyle = '#29DBBE';
-  roundRect(-PW / 2 - 3, -PH / 2 + 9, 7, 13, 2);
-  ctx.fill();
-  // legs
-  ctx.fillStyle = '#071351';
-  ctx.fillRect(-6 + swing * 0.3, PH / 2 - 6, 5, 6);
-  ctx.fillRect(1 - swing * 0.3, PH / 2 - 6, 5, 6);
-  // body
-  ctx.fillStyle = '#357DE4';
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 1.5;
-  roundRect(-PW / 2 + 2, -PH / 2 + 13, PW - 4, 12, 4);
-  ctx.fill(); ctx.stroke();
-  // head (generic navigator helmet with visor)
-  ctx.beginPath();
-  ctx.arc(0, -PH / 2 + 7, 7, 0, Math.PI * 2);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fill();
-  ctx.strokeStyle = '#071351';
-  ctx.stroke();
-  ctx.fillStyle = '#071351';
-  roundRect(-1, -PH / 2 + 5, 7, 3, 1.5);
-  ctx.fill();
-  // compass dot
-  ctx.fillStyle = '#F3AB39';
-  ctx.beginPath();
-  ctx.arc(2, -PH / 2 + 19, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  const cg = ctx.createLinearGradient(x - rx, y - ry, x + rx, y + ry);
+  cg.addColorStop(0, '#FFF6B0'); cg.addColorStop(0.5, '#FFD23F'); cg.addColorStop(1, '#D98A16');
+  ctx.fillStyle = cg; ctx.fill();
+  ctx.strokeStyle = '#7A4305'; ctx.lineWidth = 1.5; ctx.stroke();
+  if (rx > 4) {
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fillRect(x - rx * 0.5, y - ry * 0.6, 2, ry * 0.7);
+  }
 }
 
 function drawParticles() {
   for (const q of particles) {
-    ctx.globalAlpha = Math.max(0, q.life / q.max);
+    const a = Math.max(0, q.life / q.max);
+    ctx.globalAlpha = a;
     ctx.fillStyle = q.color;
-    ctx.fillRect(q.x - 2, q.y - 2, 4, 4);
+    if (q.kind === 'star') {
+      const s = 4 + (1 - a) * 2;
+      ctx.beginPath();
+      ctx.moveTo(q.x, q.y - s); ctx.lineTo(q.x + s * 0.3, q.y); ctx.lineTo(q.x, q.y + s); ctx.lineTo(q.x - s * 0.3, q.y);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.fillRect(q.x - 2, q.y - 2, 4, 4);
+    }
   }
   ctx.globalAlpha = 1;
 }
 
+function drawShadow(cx, feetY, rx) {
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(cx, feetY, rx, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// Navigator sprite, drawn from the feet centre. Hitbox stays PW x PH.
+function drawPlayer() {
+  const p = player;
+  const grounded = p.onGround;
+  const run = grounded && Math.abs(p.vx) > 20 ? Math.sin(p.anim) : 0;
+  const air = !grounded;
+  const cx = p.x + PW / 2, fy = p.y + PH;
+  if (grounded) drawShadow(cx, fy, 9);
+
+  ctx.save();
+  ctx.translate(cx, fy);
+  ctx.scale(p.face >= 0 ? 1 : -1, 1);
+  ctx.lineJoin = 'round';
+
+  // backpack (teal, with a light top)
+  ctx.fillStyle = '#1EAF9B';
+  roundRect(-14, -22, 8, 14, 3); ctx.fill();
+  ctx.fillStyle = '#29DBBE';
+  roundRect(-14, -22, 8, 5, 3); ctx.fill();
+  ctx.strokeStyle = '#071351'; ctx.lineWidth = 1.5;
+  roundRect(-14, -22, 8, 14, 3); ctx.stroke();
+
+  // legs with run cycle
+  const legA = air ? -3 : run * 3.5;
+  const legB = air ? 2 : -run * 3.5;
+  const drawLeg = (ox, lift, color) => {
+    ctx.fillStyle = color;
+    roundRect(-6 + ox, -10 - lift, 5, 10, 2); ctx.fill();
+    ctx.fillStyle = '#071351';
+    roundRect(-7 + ox, -3 - lift, 7, 3.5, 1.5); ctx.fill();
+  };
+  drawLeg(legB, Math.max(0, legB) * 0.3, '#152E7C');
+  drawLeg(legA + 1, Math.max(0, legA) * 0.3, '#1F64C5');
+
+  // body with shading and chest compass
+  const bg = ctx.createLinearGradient(0, -22, 0, -8);
+  bg.addColorStop(0, '#5C9BFF'); bg.addColorStop(1, '#1F64C5');
+  ctx.fillStyle = bg;
+  roundRect(-8, -22, 16, 14, 5); ctx.fill();
+  ctx.strokeStyle = '#071351'; ctx.lineWidth = 1.5;
+  roundRect(-8, -22, 16, 14, 5); ctx.stroke();
+  ctx.fillStyle = '#F3AB39';
+  ctx.beginPath(); ctx.arc(0, -15, 2.6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#FFF6B0';
+  ctx.beginPath(); ctx.arc(-0.5, -15.5, 1, 0, Math.PI * 2); ctx.fill();
+
+  // arms
+  const armSwing = air ? -4 : -run * 3;
+  ctx.fillStyle = '#357DE4';
+  ctx.strokeStyle = '#071351'; ctx.lineWidth = 1.2;
+  roundRect(3 + armSwing * 0.2, -20 + armSwing * 0.4, 4, 9, 2); ctx.fill(); ctx.stroke();
+  roundRect(-7 + run * 0.5, -20 + run * 0.6, 4, 9, 2); ctx.fill(); ctx.stroke();
+
+  // helmet with cyan visor
+  ctx.beginPath();
+  ctx.arc(0, -26, 7.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#FFFFFF'; ctx.fill();
+  ctx.strokeStyle = '#071351'; ctx.lineWidth = 1.5; ctx.stroke();
+  const vg = ctx.createLinearGradient(0, -30, 0, -24);
+  vg.addColorStop(0, '#B8F4FF'); vg.addColorStop(1, '#2A9FD6');
+  ctx.fillStyle = vg;
+  roundRect(-1, -30, 7.5, 5.5, 2.5); ctx.fill();
+  ctx.strokeStyle = '#071351'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(1, -29, 2, 1);
+  ctx.restore();
+}
+
 function render(t) {
-  // Screen-space sky and stars
+  // Screen-space backdrop
+  ctx.imageSmoothingEnabled = false;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const grd = ctx.createLinearGradient(0, 0, 0, cssH);
-  grd.addColorStop(0, '#071351');
-  grd.addColorStop(0.55, '#152E7C');
-  grd.addColorStop(1, L.accent);
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, cssW, cssH);
-  for (const s of STARS) {
-    let x = s.x * cssW - cam.x * S * 0.12;
-    x = ((x % cssW) + cssW) % cssW;
-    const a = state.reducedMotion ? s.a : s.a * (0.6 + 0.4 * Math.sin(t * 2 + s.p));
-    ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`;
-    ctx.fillRect(x, s.y * cssH, s.r, s.r);
-  }
+  drawBackdrop(t);
 
   // World space
   ctx.setTransform(DPR * S, 0, 0, DPR * S, -cam.x * DPR * S, (-cam.y * S - touchPad()) * DPR);
-  drawDecor();
+  drawFloatingIslands();
   for (const r of solidsStatic) drawPlatform(r);
   drawBridge();
   for (const m of movers) drawMover(m);
-  L.checkpoints.forEach((c, k) => drawCheckpoint(c, state.cps[state.levelIdx][k]));
-  for (const st of L.stations) drawStation(st);
+  L.checkpoints.forEach((c, k) => drawCheckpoint(c, state.cps[state.levelIdx][k], t));
+  for (const st of L.stations) drawStation(st, t);
   drawGate(t);
   L.sparks.forEach((s, i) => { if (!state.sparks[state.levelIdx][i]) drawSpark(s[0], s[1], i, t); });
   drawParticles();
@@ -1338,6 +1862,7 @@ function frame(now) {
     updateMovers(dt);
     updateReveal(dt);
   }
+  if (state.bannerUntil && state.time > state.bannerUntil) { state.bannerUntil = 0; $('banner').hidden = true; }
   updateParticles(dt);
   updateCamera(dt);
   updatePrompt();
@@ -1349,7 +1874,7 @@ function frame(now) {
 window.communityQuest = {
   snapshot() {
     return {
-      screen: state.screen, level: state.levelIdx + 1, levelName: L.name,
+      screen: state.screen, level: state.levelIdx + 1, levelName: L.name, theme: THEME_KEY,
       player: { x: Math.round(player.x), y: Math.round(player.y), onGround: player.onGround },
       tokens: state.tokens.slice(), lit: Object.keys(state.lit).filter(k => state.lit[k]),
       sparks: state.sparks.flat().filter(Boolean).length, dialog: state.dialog ? state.dialog.name : null
@@ -1360,6 +1885,7 @@ window.communityQuest = {
 /* ============================================================
    Boot
    ============================================================ */
+buildTextures();
 resize();
 loadLevel(0, true);
 refreshHud();
