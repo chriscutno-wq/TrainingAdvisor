@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alkami Community: Badge Quest</title>
+<style>
+  :root {
+    --deep: #050E16;
+    --navy: #0A1C2C;
+    --blue: #00A3E0;
+    --turq: #00C7B1;
+    --gold: #FFC72C;
+    --red: #FF4C4C;
+    --white: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--deep);
+    color: var(--white);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  #wrap {
+    position: relative;
+    width: min(100vw, calc(100vh * 4 / 3));
+    aspect-ratio: 4 / 3;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--deep);
+  }
+  #hud {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 8px 12px;
+    background: rgba(5, 14, 22, 0.72);
+    border: 1px solid var(--blue);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: clamp(12px, 2.4vw, 15px);
+    pointer-events: none;
+    box-shadow: 0 0 14px rgba(0, 163, 224, 0.35);
+  }
+  #hud[hidden] { display: none; }
+  #hud .row + .row { margin-top: 4px; }
+  #hearts span { display: inline-block; transition: opacity 0.2s, filter 0.2s; }
+  #hearts span.lost { opacity: 0.2; filter: grayscale(1); }
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    background: rgba(5, 14, 22, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .screen.hidden { display: none; }
+  h1 {
+    margin: 0 0 10px;
+    font-size: clamp(34px, 8vw, 56px);
+    letter-spacing: 0.5px;
+    color: var(--white);
+    text-shadow: 0 0 18px var(--blue);
+  }
+  h2 {
+    margin: 0 0 12px;
+    font-size: clamp(24px, 6vw, 36px);
+    color: var(--turq);
+    text-shadow: 0 0 14px var(--turq);
+  }
+  p, li {
+    max-width: 480px;
+    font-size: clamp(14px, 3.4vw, 16px);
+    line-height: 1.5;
+    color: #CFE9F5;
+  }
+  p { margin: 8px 0; }
+  ul.controls {
+    list-style: none;
+    padding: 0;
+    margin: 14px 0 6px;
+  }
+  ul.controls li { margin: 6px 0; }
+  kbd {
+    display: inline-block;
+    min-width: 26px;
+    padding: 1px 7px;
+    background: #0F2236;
+    border: 1px solid var(--blue);
+    border-bottom-width: 3px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--white);
+  }
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 14px;
+    text-align: left;
+  }
+  .checklist li { margin: 8px 0; font-size: 17px; color: var(--white); }
+  .checklist li::before {
+    content: "\2714\00a0";
+    color: var(--turq);
+    font-weight: 700;
+  }
+  button.cta {
+    margin-top: 16px;
+    padding: 12px 30px;
+    font: inherit;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--deep);
+    background: var(--turq);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 0 22px rgba(0, 199, 177, 0.55);
+  }
+  button.cta:hover { filter: brightness(1.08); }
+  button.cta:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game" width="800" height="600" aria-label="Badge Quest game canvas"></canvas>
+
+  <div id="hud" hidden>
+    <div class="row">Badges: <span id="badgeCount">0</span> / 3</div>
+    <div class="row">Health: <span id="hearts"></span></div>
+  </div>
+
+  <div id="startScreen" class="screen">
+    <h1>Badge Quest</h1>
+    <p>The Alkami Community badging program is launching. Navigate the network, squash the bugs, collect all three certification badges, and reach the exit.</p>
+    <ul class="controls">
+      <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>A</kbd> <kbd>D</kbd> to move</li>
+      <li><kbd>Space</kbd> <kbd>W</kbd> or <kbd>&uarr;</kbd> to jump</li>
+      <li>Land on top of a bug to destroy it. Hitting one from the side costs a heart.</li>
+    </ul>
+    <button class="cta" id="startBtn" type="button">Start Quest</button>
+  </div>
+
+  <div id="overScreen" class="screen hidden">
+    <h2>System Restart Required</h2>
+    <p>Too many bugs got through. Reboot the network and try the quest again.</p>
+    <button class="cta" id="retryBtn" type="button">Try Again</button>
+  </div>
+
+  <div id="winScreen" class="screen hidden">
+    <h2>Certification Complete!</h2>
+    <ul class="checklist">
+      <li>Alkami University Badge</li>
+      <li>Instructor-Led Training Badge</li>
+      <li>Community Discussion Badge</li>
+    </ul>
+    <p>Visit the Alkami Community site to put your new badges to work.</p>
+    <button class="cta" id="playAgainBtn" type="button">Play Again</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- Constants (from GDD) ----------
+  const W = 800, H = 600, WORLD_W = 3200;
+  const GRAVITY = 0.45, ACCEL = 0.6, FRICTION = 0.82, MAX_SPEED = 6, JUMP_POWER = -11;
+  const MAX_FALL = 12;
+  const BUG_INVULN_FRAMES = 60;
+  const STEP = 1000 / 60;                 // fixed 60 Hz physics step
+  const JUMP_BUFFER_FRAMES = 6;
+  const COLORS = {
+    deep: '#050E16', navy: '#0A1C2C', blue: '#00A3E0', turq: '#00C7B1',
+    gold: '#FFC72C', red: '#FF4C4C', white: '#FFFFFF'
+  };
+
+  // ---------- Canvas ----------
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+
+  // ---------- Level layout ----------
+  const GROUND_Y = 520, GROUND_H = 80;
+  const groundSegments = [[0, 600], [680, 1420], [1500, 2600], [2680, 3200]]
+    .map(([x1, x2]) => ({ x: x1, y: GROUND_Y, w: x2 - x1, h: GROUND_H }));
+  const platforms = [
+    { x: 760,  y: 420, w: 140, h: 20 },
+    { x: 960,  y: 340, w: 120, h: 20 },
+    { x: 1200, y: 400, w: 120, h: 20 },
+    { x: 1340, y: 300, w: 130, h: 20 },
+    { x: 1780, y: 400, w: 120, h: 20 },
+    { x: 1990, y: 310, w: 120, h: 20 },
+    { x: 2180, y: 230, w: 140, h: 20 }
+  ];
+  const solids = [...groundSegments, ...platforms];
+  const exit = { x: 3080, y: 440, w: 50, h: 80 };
+  const START = { x: 60, y: GROUND_Y - 36 };
+
+  const BADGE_DEFS = [
+    { id: 'university', name: 'Alkami University Badge',        shape: 'star',    color: COLORS.gold, x: 1000, y: 300 },
+    { id: 'ilt',        name: 'Instructor-Led Training Badge',  shape: 'diamond', color: COLORS.blue, x: 1390, y: 260 },
+    { id: 'community',  name: 'Community Discussion Badge',     shape: 'hex',     color: COLORS.turq, x: 2230, y: 190 }
+  ];
+
+  const BUG_W = 34, BUG_H = 24;
+  const BUG_DEFS = [
+    { x: 800,  minX: 700,  maxX: 966 },
+    { x: 1250, minX: 1160, maxX: 1346 },
+    { x: 1700, minX: 1520, maxX: 1726 },
+    { x: 2000, minX: 1880, maxX: 2066 },
+    { x: 2800, minX: 2700, maxX: 2966 }
+  ];
+
+  // ---------- State ----------
+  let state = 'start';          // 'start' | 'playing' | 'gameover' | 'won'
+  let player, bugs, badges, particles, cam, jumpBuffer, keys;
+  let tick = 0;
+  let lastTime = performance.now(), acc = 0;
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const mod = (a, n) => ((a % n) + n) % n;
+  const overlaps = (a, b) =>
+    a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+  // Background decoration (generated once)
+  const stars = Array.from({ length: 110 }, (_, i) => ({
+    x: rand(0, W), y: rand(0, H), depth: rand(0.05, 0.4),
+    r: rand(0.6, 1.8), a: rand(0.2, 0.8), c: i % 5 === 0 ? COLORS.turq : '#FFFFFF'
+  }));
+  const rings = Array.from({ length: 9 }, () => ({
+    x: rand(0, WORLD_W), y: rand(40, H - 40), r: rand(20, 70),
+    depth: rand(0.2, 0.4), c: Math.random() < 0.5 ? COLORS.blue : COLORS.turq,
+    phase: rand(0, Math.PI * 2)
+  }));
+
+  // ---------- DOM refs ----------
+  const hud = document.getElementById('hud');
+  const badgeCountEl = document.getElementById('badgeCount');
+  const heartsEl = document.getElementById('hearts');
+  const screens = {
+    start: document.getElementById('startScreen'),
+    gameover: document.getElementById('overScreen'),
+    won: document.getElementById('winScreen')
+  };
+
+  // ---------- Helpers ----------
+  function roundRectPath(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function makePlayer() {
+    return {
+      x: START.x, y: START.y, w: 28, h: 36,
+      vx: 0, vy: 0, onGround: false, facing: 1,
+      health: 3, invuln: 0, prevBottom: START.y + 36
+    };
+  }
+
+  function makeBugs() {
+    return BUG_DEFS.map(d => ({
+      x: d.x, y: GROUND_Y - BUG_H, w: BUG_W, h: BUG_H,
+      minX: d.minX, maxX: d.maxX, dir: Math.random() < 0.5 ? -1 : 1,
+      speed: 1.2, dead: false, phase: rand(0, Math.PI * 2)
+    }));
+  }
+
+  function makeBadges() {
+    return BADGE_DEFS.map((b, i) => ({ ...b, collected: false, phase: i * 2.1 }));
+  }
+
+  function collectedCount() {
+    return badges.reduce((n, b) => n + (b.collected ? 1 : 0), 0);
+  }
+
+  function updateHUD() {
+    badgeCountEl.textContent = collectedCount();
+    heartsEl.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const s = document.createElement('span');
+      s.textContent = '❤️';
+      if (i >= player.health) s.className = 'lost';
+      heartsEl.appendChild(s);
+    }
+  }
+
+  function showScreen(name) {
+    for (const key of Object.keys(screens)) {
+      screens[key].classList.toggle('hidden', key !== name);
+    }
+    hud.hidden = name !== 'playing';
+  }
+
+  function burst(x, y, color, count, speed) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = Math.random() * speed;
+      const life = 24 + Math.random() * 20;
+      particles.push({
+        x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 1,
+        life, maxLife: life, color, size: rand(1.5, 3.5)
+      });
+    }
+  }
+
+  // ---------- Game flow ----------
+  function resetGame() {
+    player = makePlayer();
+    bugs = makeBugs();
+    badges = makeBadges();
+    particles = [];
+    jumpBuffer = 0;
+    keys = { left: false, right: false };
+    cam = clamp(player.x + player.w / 2 - W / 2, 0, WORLD_W - W);
+    updateHUD();
+  }
+
+  function startGame() {
+    if (state === 'playing') return;
+    resetGame();
+    state = 'playing';
+    showScreen('playing');
+  }
+
+  function gameOver() {
+    state = 'gameover';
+    showScreen('gameover');
+    document.getElementById('retryBtn').focus();
+  }
+
+  function win() {
+    state = 'won';
+    showScreen('won');
+    document.getElementById('playAgainBtn').focus();
+  }
+
+  // ---------- Update (fixed 60 Hz) ----------
+  function update() {
+    tick++;
+    const p = player;
+    p.prevBottom = p.y + p.h;
+    if (p.invuln > 0) p.invuln--;
+
+    // Horizontal control: acceleration toward input, friction otherwise
+    const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+    if (dir !== 0) {
+      p.vx += dir * ACCEL;
+      p.facing = dir;
+    } else {
+      p.vx *= FRICTION;
+      if (Math.abs(p.vx) < 0.05) p.vx = 0;
+    }
+    p.vx = clamp(p.vx, -MAX_SPEED, MAX_SPEED);
+
+    // Jump (buffered briefly so a press just before landing still works)
+    if (jumpBuffer > 0) {
+      if (p.onGround) {
+        p.vy = JUMP_POWER;
+        p.onGround = false;
+        burst(p.x + p.w / 2, p.y + p.h, '#FFFFFF', 8, 2);
+        jumpBuffer = 0;
+      } else {
+        jumpBuffer--;
+      }
+    }
+
+    // Gravity
+    p.vy = Math.min(p.vy + GRAVITY, MAX_FALL);
+
+    // Horizontal move + AABB resolve
+    p.x += p.vx;
+    if (p.x < 0) { p.x = 0; p.vx = 0; }
+    if (p.x + p.w > WORLD_W) { p.x = WORLD_W - p.w; p.vx = 0; }
+    for (const s of solids) {
+      if (overlaps(p, s)) {
+        if (p.vx > 0) p.x = s.x - p.w;
+        else if (p.vx < 0) p.x = s.x + s.w;
+        p.vx = 0;
+      }
+    }
+
+    // Vertical move + AABB resolve
+    p.y += p.vy;
+    p.onGround = false;
+    for (const s of solids) {
+      if (overlaps(p, s)) {
+        if (p.vy > 0) { p.y = s.y - p.h; p.onGround = true; }
+        else if (p.vy < 0) { p.y = s.y + s.h; }
+        p.vy = 0;
+      }
+    }
+
+    // Bottomless pit
+    if (p.y > H + 60) { gameOver(); return; }
+
+    // Bugs: patrol, then stomp or hurt
+    for (const e of bugs) {
+      if (e.dead) continue;
+      e.x += e.dir * e.speed;
+      if (e.x < e.minX) { e.x = e.minX; e.dir = 1; }
+      if (e.x > e.maxX) { e.x = e.maxX; e.dir = -1; }
+      if (!overlaps(p, e)) continue;
+
+      const landedOnTop = p.vy > 0 && p.prevBottom <= e.y + 8;
+      if (landedOnTop) {
+        e.dead = true;
+        burst(e.x + e.w / 2, e.y + e.h / 2, COLORS.red, 18, 4);
+        p.vy = -6;
+        p.onGround = false;
+      } else if (p.invuln <= 0) {
+        p.health--;
+        p.invuln = BUG_INVULN_FRAMES;
+        const pcx = p.x + p.w / 2, ecx = e.x + e.w / 2;
+        p.vx = pcx < ecx ? -5 : 5;
+        p.vy = -5;
+        burst(p.x + p.w / 2, p.y + p.h / 2, COLORS.red, 10, 3);
+        updateHUD();
+        if (p.health <= 0) { gameOver(); return; }
+      }
+    }
+
+    // Badge collection
+    for (const b of badges) {
+      if (b.collected) continue;
+      if (overlaps(p, { x: b.x - 16, y: b.y - 16, w: 32, h: 32 })) {
+        b.collected = true;
+        burst(b.x, b.y, b.color, 32, 5);
+        updateHUD();
+      }
+    }
+
+    // Exit portal (only when all badges are collected)
+    if (collectedCount() === BADGE_DEFS.length && overlaps(p, exit)) {
+      win();
+      return;
+    }
+
+    // Particles
+    particles = particles.filter(pt => {
+      pt.life--;
+      pt.x += pt.vx;
+      pt.y += pt.vy;
+      pt.vy += 0.05;
+      pt.vx *= 0.98;
+      return pt.life > 0;
+    });
+
+    // Smooth camera follow, clamped to world bounds
+    const target = clamp(p.x + p.w / 2 - W / 2, 0, WORLD_W - W);
+    cam += (target - cam) * 0.12;
+    cam = clamp(cam, 0, WORLD_W - W);
+  }
+
+  // ---------- Rendering ----------
+  function drawBackground(time) {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, COLORS.deep);
+    g.addColorStop(1, COLORS.navy);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle grid overlay (slow parallax)
+    const gs = 50;
+    const ox = -mod(cam * 0.5, gs);
+    ctx.strokeStyle = 'rgba(0, 163, 224, 0.07)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = ox; x <= W; x += gs) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); }
+    for (let y = 0; y <= H; y += gs) { ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); }
+    ctx.stroke();
+
+    // Floating ambient tech circles
+    for (const r of rings) {
+      const span = W + r.r * 2;
+      const sx = mod(r.x - cam * r.depth, span) - r.r;
+      const sy = r.y + Math.sin(time * 0.6 + r.phase) * 8;
+      ctx.strokeStyle = r.c;
+      ctx.globalAlpha = 0.09;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r.r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Parallax stars
+    for (const s of stars) {
+      const sx = mod(s.x - cam * s.depth, W);
+      ctx.globalAlpha = s.a;
+      ctx.fillStyle = s.c;
+      ctx.fillRect(sx, s.y, s.r, s.r);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawSolid(s) {
+    roundRectPath(s.x, s.y, s.w, s.h, 8);
+    const g = ctx.createLinearGradient(0, s.y, 0, s.y + s.h);
+    g.addColorStop(0, '#14365A');
+    g.addColorStop(1, COLORS.navy);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = COLORS.blue;
+    ctx.stroke();
+
+    // Neon highlight along the top edge
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 199, 177, 0.55)';
+    ctx.shadowColor = COLORS.turq;
+    ctx.shadowBlur = 8;
+    ctx.fillRect(s.x + 6, s.y + 1, s.w - 12, 3);
+    ctx.restore();
+  }
+
+  function drawExit() {
+    const e = exit;
+    const active = collectedCount() === BADGE_DEFS.length;
+    ctx.save();
+    if (!active) {
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = 'rgba(0, 199, 177, 0.3)';
+      ctx.lineWidth = 2;
+      roundRectPath(e.x, e.y, e.w, e.h, 6);
+      ctx.stroke();
+    } else {
+      const pulse = (Math.sin(tick * 0.1) + 1) / 2;
+      ctx.shadowColor = COLORS.turq;
+      ctx.shadowBlur = 30 + pulse * 25;
+      ctx.globalAlpha = 0.55 + pulse * 0.35;
+      roundRectPath(e.x, e.y, e.w, e.h, 6);
+      ctx.fillStyle = COLORS.turq;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = COLORS.white;
+      ctx.stroke();
+      ctx.fillStyle = COLORS.white;
+      ctx.font = 'bold 14px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('EXIT', e.x + e.w / 2, e.y + e.h / 2);
+    }
+    ctx.restore();
+  }
+
+  function drawBadge(b) {
+    if (b.collected) return;
+    const cx = b.x;
+    const cy = b.y + Math.sin(tick * 0.07 + b.phase) * 6;
+    ctx.save();
+    ctx.beginPath();
+    if (b.shape === 'star') {
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 === 0 ? 15 : 6.5;
+        const a = -Math.PI / 2 + i * Math.PI / 5;
+        const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+    } else if (b.shape === 'diamond') {
+      ctx.moveTo(cx, cy - 16);
+      ctx.lineTo(cx + 12, cy);
+      ctx.lineTo(cx, cy + 16);
+      ctx.lineTo(cx - 12, cy);
+    } else {
+      for (let i = 0; i < 6; i++) {
+        const a = i * Math.PI / 3;
+        const x = cx + Math.cos(a) * 15, y = cy + Math.sin(a) * 15;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+    }
+    ctx.closePath();
+    ctx.shadowColor = b.color;
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = b.color;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBug(e) {
+    if (e.dead) return;
+    const r = e.w / 2;
+    const cx = e.x + r;
+    const cy = e.y + 17;              // dome centre
+    const legWob = Math.sin(tick * 0.3 + e.phase);
+    const towardPlayer = Math.sign(player.x - e.x) || 1;
+    ctx.save();
+
+    // Legs
+    ctx.strokeStyle = COLORS.red;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (const k of [-0.9, -0.4, 0.4, 0.9]) {
+      ctx.moveTo(cx + k * r * 0.8, cy + 3);
+      ctx.lineTo(cx + k * r * 1.15, cy + 7 + (k > 0 ? legWob : -legWob) * 1.5);
+    }
+    ctx.stroke();
+
+    // Jagged half-circle body
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, Math.PI, 0, false);
+    const teeth = 6;
+    for (let i = 1; i <= teeth; i++) {
+      const x = cx + r - (2 * r) * (i / teeth);
+      const y = cy + (i % 2 ? 4 : 0);
+      ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.shadowColor = COLORS.red;
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = COLORS.red;
+    ctx.fill();
+
+    // Glowing eyes
+    ctx.shadowBlur = 8;
+    for (const ox of [-5, 5]) {
+      ctx.shadowColor = '#FFFFFF';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(cx + ox, cy - 6, 3.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowColor = COLORS.red;
+      ctx.fillStyle = '#7A0000';
+      ctx.beginPath();
+      ctx.arc(cx + ox + towardPlayer * 1.2, cy - 6, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPlayer() {
+    const p = player;
+    if (p.invuln > 0 && Math.floor(p.invuln / 4) % 2 === 0) return; // blink
+    const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(clamp(p.vx * 0.035, -0.3, 0.3));
+
+    // Capsule body: white -> Alkami blue gradient
+    const g = ctx.createLinearGradient(0, -p.h / 2, 0, p.h / 2);
+    g.addColorStop(0, '#FFFFFF');
+    g.addColorStop(1, COLORS.blue);
+    roundRectPath(-p.w / 2, -p.h / 2, p.w, p.h, p.w / 2);
+    ctx.shadowColor = COLORS.blue;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Dark visor
+    roundRectPath(-p.w / 2 + 4, -p.h / 2 + 8, p.w - 8, 10, 5);
+    ctx.fillStyle = COLORS.deep;
+    ctx.fill();
+
+    // Glowing eye looks in the direction of travel
+    ctx.beginPath();
+    ctx.arc(p.facing * 3, -p.h / 2 + 13, 3, 0, Math.PI * 2);
+    ctx.fillStyle = COLORS.turq;
+    ctx.shadowColor = COLORS.turq;
+    ctx.shadowBlur = 10;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (const pt of particles) {
+      ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function render(now) {
+    const time = now / 1000;
+    ctx.clearRect(0, 0, W, H);
+    drawBackground(time);
+
+    ctx.save();
+    ctx.translate(-Math.round(cam), 0);
+    for (const s of solids) drawSolid(s);
+    drawExit();
+    for (const b of badges) drawBadge(b);
+    for (const e of bugs) drawBug(e);
+    if (player) drawPlayer();
+    drawParticles();
+    ctx.restore();
+  }
+
+  // ---------- Input ----------
+  const LEFT = new Set(['ArrowLeft', 'KeyA']);
+  const RIGHT = new Set(['ArrowRight', 'KeyD']);
+  const JUMP = new Set(['Space', 'KeyW', 'ArrowUp']);
+
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Enter' && state !== 'playing') {
+      e.preventDefault();
+      startGame();
+      return;
+    }
+    if (LEFT.has(e.code) || RIGHT.has(e.code) || JUMP.has(e.code)) {
+      e.preventDefault();               // stop page scrolling / button activation
+    }
+    if (state !== 'playing') return;
+    if (LEFT.has(e.code)) keys.left = true;
+    if (RIGHT.has(e.code)) keys.right = true;
+    if (JUMP.has(e.code) && !e.repeat) jumpBuffer = JUMP_BUFFER_FRAMES;
+  });
+
+  window.addEventListener('keyup', e => {
+    if (LEFT.has(e.code)) keys.left = false;
+    if (RIGHT.has(e.code)) keys.right = false;
+  });
+
+  window.addEventListener('blur', () => {
+    if (keys) keys.left = keys.right = false;
+  });
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('retryBtn').addEventListener('click', startGame);
+  document.getElementById('playAgainBtn').addEventListener('click', startGame);
+
+  // ---------- Loop ----------
+  function loop(now) {
+    const dt = Math.min(now - lastTime, 100);
+    lastTime = now;
+    acc += dt;
+    while (acc >= STEP) {
+      if (state === 'playing') update();
+      acc -= STEP;
+    }
+    render(now);
+    requestAnimationFrame(loop);
+  }
+
+  // Initial scene: level visible behind the start overlay
+  resetGame();
+  showScreen('start');
+  document.getElementById('startBtn').focus();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
