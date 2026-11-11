@@ -1,0 +1,1371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="Community Quest: a short, friendly platformer that introduces the Alkami Community." />
+<title>Community Quest: Find, Learn, Connect</title>
+<style>
+:root{
+  --navy:#071351; --blue-2:#152E7C; --blue-3:#0251B3; --blue-4:#1F64C5; --blue-5:#357DE4;
+  --white:#FFFFFF; --paper:#FAFAFA; --line:#DBDBDB;
+  --gold:#F3AB39; --gold-2:#FAD564;
+  --teal:#1EAF9B; --teal-2:#29DBBE; --sky:#7EDEFC;
+  --focus:#FAD564;
+  --font:"Nunito Sans", Calibri, "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --head:Alverata, Cambria, Georgia, "Times New Roman", serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--navy);color:var(--white);font-family:var(--font);overflow:hidden;-webkit-tap-highlight-color:transparent}
+#game{position:fixed;inset:0;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
+canvas:focus-visible{box-shadow:inset 0 0 0 3px var(--focus)}
+[hidden]{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* HUD */
+#hud{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px 12px;pointer-events:none;z-index:4}
+.chip{pointer-events:auto;background:rgba(7,19,81,.86);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.35;max-width:min(560px,70vw)}
+.hud-line{font-weight:700}
+.hud-line.small{font-weight:600;font-size:13px;opacity:.9;margin-top:4px}
+.bar{height:6px;background:rgba(255,255,255,.2);border-radius:4px;margin:6px 0 4px;overflow:hidden}
+#hud-bar{height:100%;width:0;background:var(--teal-2);transition:width .4s}
+.tokens{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.token{border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:2px 9px;font-size:13px;white-space:nowrap}
+.token.on{background:var(--teal);border-color:var(--teal-2);font-weight:700}
+.hud-btns{display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.hud-btn{font:inherit;font-size:14px;font-weight:700;color:var(--white);background:rgba(7,19,81,.86);border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:8px 12px;min-height:40px;min-width:40px;cursor:pointer}
+
+/* Prompt */
+#prompt{position:absolute;left:50%;top:110px;transform:translateX(-50%);background:rgba(7,19,81,.9);border:1px solid rgba(255,255,255,.3);padding:8px 14px;border-radius:12px;font-size:15px;font-weight:600;max-width:calc(100% - 28px);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;z-index:6}
+#prompt.show{opacity:1}
+#prompt.action{pointer-events:auto;cursor:pointer;border-color:var(--teal-2)}
+
+/* Touch controls */
+#touch{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;padding:10px 12px calc(10px + env(safe-area-inset-bottom));pointer-events:none;z-index:5}
+body.touch.playing #touch{display:flex}
+#touch .pad{display:flex;gap:10px}
+#touch button{pointer-events:auto;touch-action:none;width:84px;height:70px;border-radius:16px;border:2px solid rgba(255,255,255,.7);background:rgba(7,19,81,.7);color:#fff;font:inherit;font-weight:700;font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;user-select:none;-webkit-user-select:none}
+#touch button span{font-size:12px;font-weight:700}
+#touch button.active{background:rgba(31,100,197,.95);border-color:var(--sky)}
+#touch button.jump{width:96px}
+
+/* Station dialog */
+#dialog{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(520px,calc(100% - 28px));background:var(--white);color:var(--navy);border-radius:16px;padding:16px 20px 18px;box-shadow:0 12px 32px rgba(0,0,0,.4);z-index:12;border-top:6px solid var(--teal)}
+#dialog .kicker{margin:0 0 2px;font-size:13px;font-weight:700;color:var(--blue-3);text-transform:uppercase;letter-spacing:.06em}
+#dialog h2{font-size:24px;margin:0 0 6px;color:var(--navy)}
+#dialog p{margin:0 0 12px;line-height:1.45;font-size:16px}
+#dialog .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+
+/* Screens */
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(7,19,81,.78);z-index:10;overflow:auto}
+.card{width:min(580px,100%);background:var(--navy);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:26px 24px;box-shadow:0 20px 50px rgba(0,0,0,.4);margin:auto}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-2);margin:0 0 6px}
+h1,h2{font-family:var(--head);font-weight:700;line-height:1.15;margin:0 0 10px}
+h1{font-size:clamp(26px,5.2vw,38px)}
+h2{font-size:clamp(22px,4.2vw,28px)}
+h2:focus{outline:none}
+p{line-height:1.5;margin:0 0 12px;font-size:16px}
+.lead{font-size:18px}
+.fine{font-size:13px;opacity:.85;margin-top:14px}
+.list{margin:0 0 12px;padding-left:20px;line-height:1.6;font-size:16px}
+.stack{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.btn{font:inherit;font-weight:700;font-size:16px;color:var(--navy);background:var(--white);border:0;border-radius:12px;padding:12px 18px;min-height:48px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.28);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center;line-height:1.25}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--teal-2)}
+.btn.ghost{background:transparent;color:var(--white);box-shadow:inset 0 0 0 2px rgba(255,255,255,.75)}
+.btn.small{min-height:40px;font-size:14px;padding:8px 14px}
+.btn:focus-visible,.hud-btn:focus-visible,#touch button:focus-visible,#dialog button:focus-visible,#dialog a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+#dialog a.btn{background:var(--navy);color:var(--white);min-height:44px}
+#dialog a.btn:focus-visible{outline-color:var(--gold)}
+@media (max-width:480px){
+  #hud{flex-direction:column;align-items:stretch}
+  .chip{max-width:none;font-size:13px;padding:6px 10px}
+  #hud-tokens .token{font-size:12px;padding:1px 7px}
+  .hud-btns{flex-direction:row;justify-content:flex-end}
+  #prompt{top:auto;bottom:118px}
+  body.touch.playing #prompt{bottom:150px}
+}
+</style>
+</head>
+<body>
+
+<main id="game">
+  <canvas id="c" tabindex="0" aria-label="Community Quest playfield. Move with A and D or the arrow keys, jump with Space, W or Up, and press E near a station to explore it."></canvas>
+
+  <header id="hud" hidden>
+    <div class="chip">
+      <div id="hud-level" class="hud-line"></div>
+      <div class="bar" aria-hidden="true"><div id="hud-bar"></div></div>
+      <div id="hud-tokens" class="tokens" aria-label="Chapter tokens"></div>
+      <div id="hud-sparks" class="hud-line small"></div>
+    </div>
+    <div class="hud-btns">
+      <button class="hud-btn toggle-sound" type="button">Sound: Off</button>
+      <button id="btn-pause" class="hud-btn" type="button">Pause</button>
+    </div>
+  </header>
+
+  <div id="prompt" role="status" aria-live="polite"></div>
+
+  <div id="touch" aria-label="Touch controls">
+    <div class="pad">
+      <button type="button" data-hold="left" aria-label="Move left">&#9664;<span>Left</span></button>
+      <button type="button" data-hold="right" aria-label="Move right">&#9654;<span>Right</span></button>
+    </div>
+    <div class="pad">
+      <button type="button" id="t-interact" aria-label="Explore the nearby station">E<span>Explore</span></button>
+      <button type="button" data-hold="jump" class="jump" aria-label="Jump">&#9650;<span>Jump</span></button>
+    </div>
+  </div>
+
+  <div id="dialog" role="dialog" aria-labelledby="dlg-title" aria-describedby="dlg-benefit" hidden>
+    <p class="kicker" id="dlg-kicker"></p>
+    <h2 id="dlg-title"></h2>
+    <p id="dlg-benefit"></p>
+    <div class="row">
+      <a id="dlg-link" class="btn" target="_blank" rel="noopener noreferrer"></a>
+      <button id="dlg-close" class="btn" type="button">Close</button>
+    </div>
+  </div>
+</main>
+
+<section id="s-title" class="screen" aria-labelledby="title-h">
+  <div class="card">
+    <p class="eyebrow">Alkami Community</p>
+    <h1 id="title-h">Community Quest: Find, Learn, Connect</h1>
+    <p class="lead">In a few minutes, explore how the Community can help you find, learn, connect, and contribute.</p>
+    <div class="stack">
+      <button id="b-play" class="btn primary" type="button">Play</button>
+      <button id="b-howto-title" class="btn" type="button">How to Play</button>
+      <a class="btn ghost" href="https://community.alkami.com/" target="_blank" rel="noopener noreferrer">Visit the Alkami Community <span class="sr">(opens in a new tab)</span></a>
+    </div>
+    <div class="row">
+      <button class="btn small toggle-sound" type="button"></button>
+      <button class="btn small toggle-motion" type="button"></button>
+    </div>
+  </div>
+</section>
+
+<section id="s-howto" class="screen" aria-labelledby="howto-h">
+  <div class="card">
+    <h2 id="howto-h" tabindex="-1">How to Play</h2>
+    <ul class="list">
+      <li><strong>Move:</strong> A / D or Left / Right arrows (touch: Left and Right buttons).</li>
+      <li><strong>Jump:</strong> Space, W, or Up arrow (touch: Jump).</li>
+      <li><strong>Explore a station:</strong> stand near it and press E or Enter, or tap its prompt (touch: Explore).</li>
+      <li><strong>Pause:</strong> Esc, or the Pause button.</li>
+    </ul>
+    <p><strong>Goal:</strong> light each station in a level to collect its chapter token and open the gate. Insight Sparks are optional.</p>
+    <p>Falling returns you to the last checkpoint. Nothing is lost.</p>
+    <div class="row"><button id="howto-back" class="btn primary" type="button">Back</button></div>
+  </div>
+</section>
+
+<section id="s-pause" class="screen" aria-labelledby="pause-h">
+  <div class="card">
+    <h2 id="pause-h" tabindex="-1">Paused</h2>
+    <div class="stack">
+      <button id="p-resume" class="btn primary" type="button">Resume</button>
+      <button id="p-checkpoint" class="btn" type="button">Return to checkpoint</button>
+      <button id="p-howto" class="btn" type="button">How to Play</button>
+      <button class="btn toggle-sound" type="button"></button>
+      <button class="btn toggle-motion" type="button"></button>
+      <button id="p-skip" class="btn ghost" type="button">Skip to finish</button>
+      <button id="p-quit" class="btn ghost" type="button">Quit to title</button>
+    </div>
+  </div>
+</section>
+
+<section id="s-chapter" class="screen" aria-labelledby="ch-title">
+  <div class="card">
+    <p class="eyebrow">Chapter complete</p>
+    <h2 id="ch-title" tabindex="-1"></h2>
+    <p id="ch-body"></p>
+    <div id="ch-tokens" class="tokens"></div>
+    <div class="row"><button id="ch-next" class="btn primary" type="button"></button></div>
+  </div>
+</section>
+
+<section id="s-end" class="screen" aria-labelledby="end-h">
+  <div class="card">
+    <p class="eyebrow">Community Network</p>
+    <h2 id="end-h" tabindex="-1">You connected the Community Network!</h2>
+    <p>The Alkami Community brings product guidance, releases, learning resources, events, peer conversations, and ideas together in one client destination. Choose a path that fits what you need next.</p>
+    <div id="end-tokens" class="tokens" aria-label="Chapter tokens"></div>
+    <div class="stack">
+      <a class="btn primary" href="https://community.alkami.com/" target="_blank" rel="noopener noreferrer">Explore the Community <span class="sr">(opens in a new tab)</span></a>
+      <a class="btn" href="https://community.alkami.com/" target="_blank" rel="noopener noreferrer">Find product guidance <span class="sr">(opens in a new tab)</span></a>
+      <a class="btn" href="https://community.alkami.com/p/release-center" target="_blank" rel="noopener noreferrer">Explore release information <span class="sr">(opens in a new tab)</span></a>
+      <a class="btn" href="https://community.alkami.com/all-forums-189" target="_blank" rel="noopener noreferrer">Connect with peers <span class="sr">(opens in a new tab)</span></a>
+      <a class="btn" href="https://community.alkami.com/all-resource-hubs-180" target="_blank" rel="noopener noreferrer">Browse events and resources <span class="sr">(opens in a new tab)</span></a>
+    </div>
+    <div class="row">
+      <button id="end-replay" class="btn ghost" type="button">Play again</button>
+      <button id="end-title" class="btn ghost" type="button">Back to title</button>
+    </div>
+    <p class="fine">Links open the Alkami Community in a new tab. This game has no login and collects no personal information.</p>
+  </div>
+</section>
+
+<noscript><p style="position:fixed;inset:auto 16px 16px;background:#071351;padding:12px;border-radius:10px">Community Quest needs JavaScript to run. You can still visit the <a href="https://community.alkami.com/" style="color:#FAD564">Alkami Community</a>.</p></noscript>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   Constants
+   ============================================================ */
+const PW = 22, PH = 30;              // player box
+const GRAV = 1750, MAX_FALL = 920;
+const JUMP_V = -610, JUMP_CUT_V = -210;
+const MAX_RUN = 250, ACC_G = 2100, ACC_A = 1400, FRICT = 2400;
+const COYOTE = 0.11, JBUF = 0.12;
+const WORLD_H = 540, FALL_Y = WORLD_H + 140;
+const BASE_W = 640, BASE_H = 400;    // minimum logical view; bigger screens show more world
+
+/* ============================================================
+   Level data. Coordinates: platforms [x, y, w, h]; spawn/checkpoints/stations use
+   the standing surface y. Sparks use their centre point.
+   ============================================================ */
+const LEVELS = [
+  {
+    name: 'Home Hub', token: 'Find', width: 2000, spawn: [60, 440], accent: '#1F64C5',
+    intro: 'Welcome to the Community Network. Reach Community Home and press E.',
+    chapter: 'Community Home is where you start: a route to useful information and high-interest destinations.',
+    platforms: [
+      [0, 440, 600, 100], [680, 440, 460, 100], [1220, 440, 780, 100],
+      [280, 360, 130, 16], [500, 290, 120, 16], [860, 370, 120, 16],
+      [1040, 300, 140, 16], [1360, 370, 160, 16], [1600, 300, 180, 16]
+    ],
+    movers: [], bridge: null,
+    checkpoints: [[720, 440]],
+    sparks: [[320, 320], [540, 250], [900, 330], [1090, 190], [1080, 262], [1420, 330], [1680, 260]],
+    stations: [
+      { id: 'l1-hub', x: 1260, y: 440, kind: 'hub', label: 'Community Home', name: 'Community Home',
+        benefit: 'Your starting point for finding useful information and high-interest destinations.',
+        link: 'https://community.alkami.com/', required: true }
+    ],
+    gate: { x: 1900, y: 440 }
+  },
+  {
+    name: 'Guidebook Grove', token: 'Learn', width: 2300, spawn: [60, 440], accent: '#0251B3',
+    intro: 'Cross the gap, then light the Product Guides station.',
+    chapter: 'Product Guides and the Knowledge Base help you find instructions. Known Issues help you check what is already reported.',
+    platforms: [
+      [0, 440, 560, 100], [700, 440, 400, 100], [1180, 440, 1120, 100],
+      [800, 350, 130, 16], [1000, 280, 120, 16], [1320, 360, 140, 16],
+      [1560, 290, 130, 16], [1800, 220, 140, 16]
+    ],
+    movers: [{ x: 520, y: 350, w: 110, h: 16, dx: 130, dy: 0, period: 4.2 }],
+    bridge: null,
+    checkpoints: [[740, 440], [1340, 360]],
+    sparks: [[840, 310], [1040, 240], [1360, 320], [1600, 250], [1840, 180], [2080, 400], [620, 300]],
+    stations: [
+      { id: 'l2-guide', x: 1500, y: 440, kind: 'guide', label: 'Product Guides', name: 'Product Guides & Knowledge Base',
+        benefit: 'Find product guidance and instructions when you need them.',
+        link: 'https://community.alkami.com/', required: true },
+      { id: 'l2-known', x: 1020, y: 440, kind: 'known', label: 'Known Issues', name: 'Known Issues',
+        benefit: 'Check whether an issue is already known before you start a new search.',
+        link: 'https://community.alkami.com/', required: false }
+    ],
+    gate: { x: 2200, y: 440 }
+  },
+  {
+    name: 'Release Ridge', token: 'Explore', width: 2300, spawn: [60, 440], accent: '#1B5AA8',
+    intro: 'Ride the lift up the ridge, then light the Release Center beacon.',
+    chapter: 'The Release Center brings release information and testing resources together. Ideas and Roadmap help you follow product topics. Roadmap items are not delivery promises.',
+    platforms: [
+      [0, 440, 480, 100],
+      [640, 280, 200, 16], [920, 360, 160, 16], [1160, 300, 140, 16],
+      [1380, 220, 160, 16], [1500, 340, 100, 16], [1600, 440, 700, 100]
+    ],
+    movers: [{ x: 500, y: 440, w: 100, h: 16, dx: 0, dy: -160, period: 4.4 }],
+    bridge: null,
+    checkpoints: [[720, 280], [1640, 440]],
+    sparks: [[700, 240], [960, 320], [1220, 260], [1450, 180], [1550, 300], [1750, 400], [2020, 400]],
+    stations: [
+      { id: 'l3-release', x: 1960, y: 440, kind: 'release', label: 'Release Center', name: 'Release Center',
+        benefit: 'Find release information and related testing resources in one place.',
+        link: 'https://community.alkami.com/p/release-center', required: true },
+      { id: 'l3-ideas', x: 1240, y: 300, kind: 'ideas', label: 'Ideas & Roadmap', name: 'Ideas & Roadmap',
+        benefit: 'Follow product topics and share ideas. Roadmap items are planning topics, not delivery promises.',
+        link: 'https://community.alkami.com/', required: false }
+    ],
+    gate: { x: 2220, y: 440 }
+  },
+  {
+    name: 'Connection Cove', token: 'Connect', width: 2000, spawn: [60, 440], accent: '#0B4F8F',
+    intro: 'Light all three nodes to form a bridge across the cove.',
+    chapter: 'Discussions, User Groups, and Directories help you ask, answer, exchange practices, and find people and products.',
+    platforms: [
+      [0, 440, 520, 100], [900, 440, 1100, 100],
+      [240, 330, 130, 16],
+      [1100, 360, 120, 16], [1300, 290, 120, 16], [1520, 360, 120, 16]
+    ],
+    movers: [],
+    bridge: { x: 520, y: 380, w: 380, h: 16 },
+    checkpoints: [[940, 440], [1320, 290]],
+    sparks: [[300, 290], [700, 340], [1150, 320], [1350, 250], [1560, 320], [1800, 400], [460, 400]],
+    stations: [
+      { id: 'l4-discuss', x: 160, y: 440, kind: 'discuss', label: 'Discussions', name: 'Discussions',
+        benefit: 'Ask questions, answer peers, and exchange practices with other financial institutions.',
+        link: 'https://community.alkami.com/all-forums-189', required: true },
+      { id: 'l4-groups', x: 330, y: 440, kind: 'groups', label: 'User Groups', name: 'User Groups',
+        benefit: 'Connect with peers to share practices and learn from each other.',
+        link: 'https://community.alkami.com/groups', required: true },
+      { id: 'l4-dir', x: 450, y: 440, kind: 'dir', label: 'Directories', name: 'Directories',
+        benefit: 'Discover people and products across the Community.',
+        link: 'https://community.alkami.com/', required: true }
+    ],
+    gate: { x: 1880, y: 440 }
+  },
+  {
+    name: 'Learning Lighthouse', token: 'Contribute', width: 2300, spawn: [60, 440], accent: '#0A3F86',
+    intro: 'Time the event platforms, then light the lighthouse to finish the network.',
+    chapter: 'Events, webinars, recordings, resources, and news help you keep learning. Share your questions and ideas to join the conversation.',
+    platforms: [
+      [0, 440, 420, 100], [640, 440, 360, 100],
+      [1040, 360, 140, 16], [1240, 300, 130, 16],
+      [1600, 380, 160, 16], [1800, 440, 500, 100]
+    ],
+    movers: [
+      { x: 440, y: 400, w: 110, h: 16, dx: 150, dy: 0, period: 4.0 },
+      { x: 1420, y: 300, w: 110, h: 16, dx: 0, dy: -80, period: 3.6 }
+    ],
+    bridge: null,
+    checkpoints: [[700, 440], [1080, 360]],
+    sparks: [[300, 380], [1100, 320], [1290, 260], [1460, 250], [1700, 330], [1960, 400], [520, 340]],
+    stations: [
+      { id: 'l5-events', x: 1900, y: 440, kind: 'events', label: 'Events', name: 'Events & Resources',
+        benefit: 'Find events, webinars, recordings, and resources to keep learning.',
+        link: 'https://community.alkami.com/all-resource-hubs-180', required: true },
+      { id: 'l5-news', x: 1680, y: 380, kind: 'news', label: 'News', name: 'News & Announcements',
+        benefit: 'Stay informed with Community news and updates.',
+        link: 'https://community.alkami.com/', required: false }
+    ],
+    gate: { x: 2200, y: 440 }
+  }
+];
+const TOKEN_NAMES = LEVELS.map(l => l.token);
+
+/* ============================================================
+   Shared helpers and state
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const canvas = $('c');
+const ctx = canvas.getContext('2d');
+const motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const STARS = Array.from({ length: 90 }, () => ({
+  x: rnd(), y: rnd() * 0.9, r: rnd() < 0.2 ? 2 : 1, a: 0.35 + rnd() * 0.5, p: rnd() * 6.28
+}));
+
+function makeProgress() {
+  return {
+    tokens: LEVELS.map(() => false),
+    lit: {},
+    sparks: LEVELS.map(l => l.sparks.map(() => false)),
+    cps: LEVELS.map(l => l.checkpoints.map(() => false)),
+    reveal: LEVELS.map(() => 0)
+  };
+}
+
+const state = Object.assign({
+  screen: 'title', howtoFrom: 'title', levelIdx: 0,
+  dialog: null, near: null, gateNear: false,
+  reducedMotion: motionQuery ? motionQuery.matches : false,
+  soundOn: false, time: 0, flash: null, promptKey: '', completed: false
+}, makeProgress());
+
+const input = { left: false, right: false, jumpHeld: false, jumpPressed: false };
+
+// Current level runtime
+let L = null;
+let solidsStatic = [], movers = [], bridgeSolid = null, gateRect = null, decor = [];
+let player = null, respawn = [0, 0], particles = [];
+const cam = { x: 0, y: 0 };
+let camSnap = true;
+let S = 1, DPR = 1, cssW = 0, cssH = 0;
+
+/* ============================================================
+   Level setup
+   ============================================================ */
+function makeDecor(def) {
+  const n = Math.max(3, Math.round(def.width / 420));
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    out.push({ x: def.width * (k + 0.5) / n + (rnd() - 0.5) * 120, y: 150 + rnd() * 60, w: 90 + rnd() * 90 });
+  }
+  return out;
+}
+
+function placeAtRespawn() {
+  player = {
+    x: respawn[0] - PW / 2, y: respawn[1] - PH, vx: 0, vy: 0,
+    onGround: false, ground: null, coyote: 0, jbuf: 0, jumping: false, face: 1, anim: 0
+  };
+}
+
+function loadLevel(i, quiet) {
+  state.levelIdx = i;
+  L = LEVELS[i];
+  movers = L.movers.map(m => ({
+    x: m.x, y: m.y, w: m.w, h: m.h, bx: m.x, by: m.y,
+    dx: m.dx || 0, dy: m.dy || 0, period: m.period, t: 0, px: m.x, py: m.y
+  }));
+  solidsStatic = L.platforms.map(([x, y, w, h]) => ({ x, y, w, h }));
+  bridgeSolid = L.bridge ? Object.assign({}, L.bridge) : null;
+  gateRect = { x: L.gate.x - 18, y: L.gate.y - 90, w: 36, h: 90 };
+  decor = makeDecor(L);
+  respawn = L.spawn.slice();
+  placeAtRespawn();
+  particles = [];
+  state.dialog = null;
+  $('dialog').hidden = true;
+  camSnap = true;
+  refreshHud();
+  if (!quiet) showPrompt(L.intro, false, 5200);
+}
+
+function resetProgress() {
+  Object.assign(state, makeProgress());
+  state.completed = false;
+  state.dialog = null;
+}
+
+function allRequiredLit() {
+  return L.stations.every(s => !s.required || state.lit[s.id]);
+}
+
+/* ============================================================
+   Screens
+   ============================================================ */
+const screens = {
+  title: $('s-title'), howto: $('s-howto'), pause: $('s-pause'),
+  chapter: $('s-chapter'), end: $('s-end')
+};
+const FOCUS_TARGET = { title: 'b-play', howto: 'howto-back', pause: 'p-resume', chapter: 'ch-next', end: 'end-h' };
+
+function show(name) {
+  state.screen = name;
+  for (const k in screens) screens[k].hidden = (k !== name);
+  $('hud').hidden = (name !== 'play');
+  document.body.classList.toggle('playing', name === 'play');
+  if (name !== 'play') clearInput();
+  updateToggleLabels();
+  if (name === 'play') {
+    canvas.focus({ preventScroll: true });
+  } else {
+    const el = $(FOCUS_TARGET[name]);
+    if (el) el.focus({ preventScroll: true });
+  }
+}
+
+function openHowto(from) {
+  state.howtoFrom = from;
+  show('howto');
+}
+
+function startGame() {
+  ensureAudio();
+  resetProgress();
+  loadLevel(0);
+  show('play');
+}
+
+function pauseGame() {
+  if (state.screen !== 'play') return;
+  state.dialog = null;
+  $('dialog').hidden = true;
+  show('pause');
+}
+
+function resumeGame() {
+  if (state.screen !== 'pause') return;
+  show('play');
+}
+
+function returnToCheckpoint() {
+  placeAtRespawn();
+  clearInput();
+  show('play');
+}
+
+function completeLevel() {
+  const i = state.levelIdx;
+  clearInput();
+  state.dialog = null;
+  $('dialog').hidden = true;
+  if (i >= LEVELS.length - 1) { finish(); return; }
+  sfx('gate');
+  $('ch-title').textContent = `Chapter ${i + 1} complete: ${L.name}`;
+  $('ch-body').textContent = L.chapter;
+  renderTokenChips($('ch-tokens'));
+  $('ch-next').textContent = `Continue to ${LEVELS[i + 1].name}`;
+  show('chapter');
+}
+
+function nextLevel() {
+  loadLevel(state.levelIdx + 1);
+  show('play');
+}
+
+function finish() {
+  state.completed = true;
+  state.dialog = null;
+  $('dialog').hidden = true;
+  clearInput();
+  renderTokenChips($('end-tokens'));
+  show('end');
+}
+
+function clearInput() {
+  input.left = false; input.right = false; input.jumpHeld = false; input.jumpPressed = false;
+}
+
+/* ============================================================
+   Stations, dialog, prompts
+   ============================================================ */
+function activateStation(st) {
+  const was = !!state.lit[st.id];
+  if (!was) {
+    state.lit[st.id] = true;
+    burst(st.x, st.y - 40, '#29DBBE');
+    sfx('light');
+    if (st.required && allRequiredLit() && !state.tokens[state.levelIdx]) {
+      state.tokens[state.levelIdx] = true;
+      sfx('gate');
+      showPrompt(`${L.token} token collected. The gate is open.`, false, 3500);
+    }
+  }
+  refreshHud();
+  openDialog(st, !was);
+}
+
+function openDialog(st, justLit) {
+  clearInput();
+  state.dialog = st;
+  $('dlg-kicker').textContent = justLit ? 'Station lit' : 'Destination';
+  $('dlg-title').textContent = st.name;
+  $('dlg-benefit').textContent = st.benefit;
+  const a = $('dlg-link');
+  a.href = st.link;
+  a.textContent = 'Explore this area';
+  a.setAttribute('aria-label', 'Explore this area (opens in a new tab)');
+  $('dialog').hidden = false;
+  $('dlg-close').focus({ preventScroll: true });
+}
+
+function closeDialog() {
+  state.dialog = null;
+  $('dialog').hidden = true;
+  if (state.screen === 'play') canvas.focus({ preventScroll: true });
+}
+
+function interact() {
+  if (state.screen !== 'play') return;
+  ensureAudio();
+  if (state.dialog) { closeDialog(); return; }
+  if (state.near) activateStation(state.near);
+}
+
+function showPrompt(text, action, ms) {
+  state.flash = { text, action: !!action, until: state.time + ms / 1000 };
+}
+
+function setPrompt(text, action) {
+  const key = text + '|' + action;
+  if (key === state.promptKey) return;
+  state.promptKey = key;
+  const el = $('prompt');
+  el.textContent = text;
+  el.classList.toggle('show', !!text);
+  el.classList.toggle('action', !!action && !!text);
+}
+
+function updatePrompt() {
+  if (state.screen !== 'play' || state.dialog) { state.flash = null; setPrompt('', false); return; }
+  if (state.flash && state.time < state.flash.until) { setPrompt(state.flash.text, false); return; }
+  state.flash = null;
+  if (state.near) {
+    const st = state.near;
+    setPrompt(state.lit[st.id] ? `Review ${st.label}: press E or tap` : `Explore ${st.label}: press E or tap`, true);
+    return;
+  }
+  if (state.gateNear) {
+    setPrompt(allRequiredLit() ? 'The gate is open. Walk through to continue.' : 'Light the stations in this level to open the gate.', false);
+    return;
+  }
+  setPrompt('', false);
+}
+
+function renderTokenChips(el) {
+  el.textContent = '';
+  TOKEN_NAMES.forEach((name, i) => {
+    const s = document.createElement('span');
+    const got = state.tokens[i];
+    s.className = 'token' + (got ? ' on' : '');
+    s.textContent = (got ? '✓ ' : '○ ') + name;
+    el.appendChild(s);
+  });
+}
+
+function refreshHud() {
+  if (!L) return;
+  $('hud-level').textContent = `Level ${state.levelIdx + 1} of ${LEVELS.length} · ${L.name}`;
+  const total = LEVELS.reduce((a, l) => a + l.sparks.length, 0);
+  const got = state.sparks.reduce((a, arr) => a + arr.filter(Boolean).length, 0);
+  $('hud-sparks').textContent = `Insight Sparks ${got} of ${total} (optional)`;
+  renderTokenChips($('hud-tokens'));
+  const earned = state.tokens.filter(Boolean).length;
+  $('hud-bar').style.width = (earned / LEVELS.length * 100) + '%';
+}
+
+/* ============================================================
+   Settings and audio
+   ============================================================ */
+function updateToggleLabels() {
+  document.querySelectorAll('.toggle-sound').forEach(b => {
+    b.textContent = `Sound: ${state.soundOn ? 'On' : 'Off'}`;
+    b.setAttribute('aria-pressed', String(state.soundOn));
+  });
+  document.querySelectorAll('.toggle-motion').forEach(b => {
+    b.textContent = `Reduced motion: ${state.reducedMotion ? 'On' : 'Off'}`;
+    b.setAttribute('aria-pressed', String(state.reducedMotion));
+  });
+}
+
+function toggleSound() {
+  state.soundOn = !state.soundOn;
+  if (state.soundOn) { ensureAudio(); sfx('check'); }
+  updateToggleLabels();
+}
+
+function toggleMotion() {
+  state.reducedMotion = !state.reducedMotion;
+  camSnap = true;
+  updateToggleLabels();
+}
+
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    } catch (e) { audioCtx = null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+}
+
+function tone(freq, dur, type, vol, delay) {
+  if (!state.soundOn || !audioCtx) return;
+  try {
+    const t0 = audioCtx.currentTime + (delay || 0);
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t0); o.stop(t0 + dur + 0.03);
+  } catch (e) { /* audio is optional */ }
+}
+
+const SFX = {
+  jump: () => tone(520, 0.08, 'triangle', 0.04),
+  spark: () => { tone(880, 0.08, 'sine', 0.05); tone(1320, 0.1, 'sine', 0.04, 0.05); },
+  light: () => [523, 659, 784, 988].forEach((f, i) => tone(f, 0.16, 'triangle', 0.05, i * 0.09)),
+  gate: () => [392, 494, 587, 784].forEach((f, i) => tone(f, 0.22, 'sine', 0.05, i * 0.1)),
+  fall: () => tone(220, 0.25, 'sawtooth', 0.025),
+  check: () => tone(700, 0.1, 'sine', 0.04)
+};
+function sfx(name) { if (SFX[name]) SFX[name](); }
+
+/* ============================================================
+   Physics
+   ============================================================ */
+function overlap(p, s) {
+  return p.x < s.x + s.w && p.x + PW > s.x && p.y < s.y + s.h && p.y + PH > s.y;
+}
+
+function levelSolids() {
+  const arr = solidsStatic.concat(movers);
+  if (bridgeSolid && state.reveal[state.levelIdx] >= 1) arr.push(bridgeSolid);
+  return arr;
+}
+
+function updateMovers(dt) {
+  for (const m of movers) {
+    m.t += dt;
+    const k = (1 - Math.cos(2 * Math.PI * m.t / m.period)) / 2;
+    m.px = m.x; m.py = m.y;
+    m.x = m.bx + m.dx * k;
+    m.y = m.by + m.dy * k;
+  }
+}
+
+function updateReveal(dt) {
+  const i = state.levelIdx;
+  const target = state.tokens[i] ? 1 : 0;
+  const r = state.reveal[i];
+  state.reveal[i] = state.reducedMotion ? target : r + clamp(target - r, -dt * 1.5, dt * 1.5);
+}
+
+function updatePlayer(dt) {
+  const p = player;
+  const sol = levelSolids();
+
+  // Ride moving platforms
+  if (p.onGround && p.ground && p.ground.px !== undefined) {
+    p.x += p.ground.x - p.ground.px;
+    p.y += p.ground.y - p.ground.py;
+  }
+
+  // Horizontal input
+  const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+  if (dir) {
+    p.vx += dir * (p.onGround ? ACC_G : ACC_A) * dt;
+    p.face = dir;
+  } else {
+    const f = (p.onGround ? FRICT : FRICT * 0.35) * dt;
+    if (Math.abs(p.vx) <= f) p.vx = 0;
+    else p.vx -= Math.sign(p.vx) * f;
+  }
+  p.vx = clamp(p.vx, -MAX_RUN, MAX_RUN);
+
+  // Jump with buffer and coyote time; short hop when released early
+  if (input.jumpPressed) { p.jbuf = JBUF; input.jumpPressed = false; }
+  if (p.jbuf > 0) p.jbuf -= dt;
+  if (p.jbuf > 0 && p.coyote > 0) {
+    p.vy = JUMP_V; p.jbuf = 0; p.coyote = 0;
+    p.onGround = false; p.ground = null; p.jumping = true;
+    sfx('jump');
+  }
+  if (p.jumping && !input.jumpHeld && p.vy < JUMP_CUT_V) p.vy = JUMP_CUT_V;
+  if (p.vy >= 0) p.jumping = false;
+  p.vy = Math.min(MAX_FALL, p.vy + GRAV * dt);
+
+  // Horizontal move and collide
+  p.x += p.vx * dt;
+  for (const s of sol) {
+    if (overlap(p, s)) {
+      if (p.x + PW / 2 < s.x + s.w / 2) p.x = s.x - PW;
+      else p.x = s.x + s.w;
+      p.vx = 0;
+    }
+  }
+
+  // Vertical move and collide
+  p.onGround = false; p.ground = null;
+  p.y += p.vy * dt;
+  for (const s of sol) {
+    if (overlap(p, s)) {
+      if (p.vy >= 0) { p.y = s.y - PH; p.onGround = true; p.ground = s; }
+      else p.y = s.y + s.h;
+      p.vy = 0;
+    }
+  }
+  if (p.onGround) { p.coyote = COYOTE; p.jumping = false; }
+  else p.coyote -= dt;
+
+  p.anim += dt * (p.onGround ? Math.abs(p.vx) / 30 : 0.5);
+
+  // Checkpoints
+  const li = state.levelIdx;
+  for (let k = 0; k < L.checkpoints.length; k++) {
+    const c = L.checkpoints[k];
+    if (!state.cps[li][k] && Math.abs(p.x + PW / 2 - c[0]) < 28 && Math.abs(p.y + PH - c[1]) < 30) {
+      state.cps[li][k] = true;
+      respawn = c.slice();
+      sfx('check');
+      showPrompt('Checkpoint saved.', false, 1800);
+    }
+  }
+
+  // Insight Sparks (optional)
+  for (let k = 0; k < L.sparks.length; k++) {
+    if (state.sparks[li][k]) continue;
+    const sx = L.sparks[k][0], sy = L.sparks[k][1];
+    if (sx > p.x - 6 && sx < p.x + PW + 6 && sy > p.y - 6 && sy < p.y + PH + 6) {
+      state.sparks[li][k] = true;
+      sfx('spark');
+      burst(sx, sy, '#F3AB39');
+      refreshHud();
+    }
+  }
+
+  // Fall recovery
+  if (p.y > FALL_Y) {
+    sfx('fall');
+    showPrompt('Back to the last checkpoint. Nothing is lost.', false, 2600);
+    placeAtRespawn();
+    return;
+  }
+
+  // Gate: open once required stations are lit
+  if (allRequiredLit() && overlap(p, gateRect)) completeLevel();
+}
+
+function updateNear() {
+  const p = player;
+  state.near = null;
+  for (const st of L.stations) {
+    if (Math.abs(p.x + PW / 2 - st.x) < 46 && Math.abs(p.y + PH - st.y) < 26) { state.near = st; break; }
+  }
+  state.gateNear = overlap(player, { x: L.gate.x - 40, y: L.gate.y - 100, w: 80, h: 100 });
+}
+
+function step(dt) {
+  updateMovers(dt);
+  updateReveal(dt);
+  updatePlayer(dt);
+  if (state.screen === 'play') updateNear();
+}
+
+/* ============================================================
+   Effects and camera
+   ============================================================ */
+function burst(x, y, color) {
+  if (state.reducedMotion) return;
+  for (let i = 0; i < 10; i++) {
+    const a = Math.random() * Math.PI * 2, s = 60 + Math.random() * 120;
+    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: 0.6, max: 0.6, color });
+  }
+}
+
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const q = particles[i];
+    q.life -= dt;
+    if (q.life <= 0) { particles.splice(i, 1); continue; }
+    q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 500 * dt;
+  }
+}
+
+// Screen pixels kept clear at the bottom for on-screen touch controls
+function touchPad() {
+  return document.body.classList.contains('touch') ? Math.min(130, cssH * 0.22) : 0;
+}
+
+function updateCamera(dt) {
+  const vw = cssW / S, vh = (cssH - touchPad()) / S;
+  const tx = clamp(player.x + PW / 2 - vw / 2, Math.min(0, L.width - vw), Math.max(0, L.width - vw));
+  const ty = vh >= WORLD_H ? WORLD_H - vh : clamp(player.y + PH / 2 - vh * 0.6, 0, WORLD_H - vh);
+  if (camSnap || state.reducedMotion) { cam.x = tx; cam.y = ty; camSnap = false; }
+  else {
+    const k = 1 - Math.pow(0.0025, dt);
+    cam.x += (tx - cam.x) * k;
+    cam.y += (ty - cam.y) * k;
+  }
+}
+
+/* ============================================================
+   Drawing
+   ============================================================ */
+function roundRect(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawDecor() {
+  ctx.save();
+  ctx.setLineDash([3, 7]);
+  ctx.strokeStyle = 'rgba(126,222,252,0.28)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  decor.forEach((d, k) => {
+    const cx = d.x + d.w / 2, cy = d.y + 8;
+    if (k === 0) ctx.moveTo(cx, cy); else ctx.lineTo(cx, cy);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(126,222,252,0.16)';
+  for (const d of decor) {
+    roundRect(d.x, d.y, d.w, 16, 8);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(d.x + d.w * 0.3, d.y + 16);
+    ctx.lineTo(d.x + d.w * 0.5, d.y + 42);
+    ctx.lineTo(d.x + d.w * 0.7, d.y + 16);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawPlatform(r) {
+  ctx.fillStyle = '#152E7C';
+  roundRect(r.x, r.y, r.w, r.h, 6);
+  ctx.fill();
+  ctx.fillStyle = '#DDEBFA';
+  roundRect(r.x, r.y, r.w, 6, 4);
+  ctx.fill();
+}
+
+function drawMover(m) {
+  ctx.save();
+  ctx.setLineDash([4, 6]);
+  ctx.strokeStyle = 'rgba(41,219,190,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(m.bx + m.w / 2, m.by + m.h / 2);
+  ctx.lineTo(m.bx + m.dx + m.w / 2, m.by + m.dy + m.h / 2);
+  ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#1EAF9B';
+  roundRect(m.x, m.y, m.w, m.h, 6);
+  ctx.fill();
+  ctx.fillStyle = '#29DBBE';
+  roundRect(m.x, m.y, m.w, 5, 3);
+  ctx.fill();
+}
+
+function drawBridge() {
+  if (!bridgeSolid) return;
+  const b = bridgeSolid;
+  const a = state.reveal[state.levelIdx];
+  if (a < 1) {
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    ctx.setLineDash([6, 6]);
+    ctx.strokeStyle = '#29DBBE';
+    ctx.lineWidth = 2;
+    roundRect(b.x, b.y, b.w, b.h, 6);
+    ctx.stroke();
+    ctx.restore();
+  }
+  if (a > 0) {
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = '#1EAF9B';
+    roundRect(b.x, b.y, b.w, b.h, 6);
+    ctx.fill();
+    ctx.fillStyle = '#29DBBE';
+    roundRect(b.x, b.y, b.w, 5, 3);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawCheckpoint(c, reached) {
+  ctx.fillStyle = '#EAF4FF';
+  ctx.fillRect(c[0] - 1.5, c[1] - 46, 3, 46);
+  ctx.fillRect(c[0] - 8, c[1] - 2, 16, 2);
+  ctx.beginPath();
+  ctx.moveTo(c[0] + 1.5, c[1] - 46);
+  ctx.lineTo(c[0] + 18, c[1] - 38);
+  ctx.lineTo(c[0] + 1.5, c[1] - 30);
+  ctx.closePath();
+  ctx.fillStyle = reached ? '#29DBBE' : '#FFFFFF';
+  ctx.fill();
+}
+
+function drawIcon(kind, x, y, r) {
+  ctx.save();
+  ctx.strokeStyle = '#071351';
+  ctx.fillStyle = '#071351';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  switch (kind) {
+    case 'hub':
+      ctx.beginPath(); ctx.arc(x, y, r * 0.45, 0, Math.PI * 2); ctx.stroke();
+      for (let k = 0; k < 4; k++) {
+        const a = k * Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(a) * r * 0.6, y + Math.sin(a) * r * 0.6);
+        ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
+        ctx.stroke();
+      }
+      break;
+    case 'guide':
+      ctx.strokeRect(x - r * 0.7, y - r * 0.6, r * 1.4, r * 1.2);
+      ctx.beginPath(); ctx.moveTo(x, y - r * 0.6); ctx.lineTo(x, y + r * 0.6); ctx.stroke();
+      break;
+    case 'known':
+      ctx.beginPath();
+      ctx.moveTo(x, y - r * 0.8); ctx.lineTo(x + r * 0.8, y); ctx.lineTo(x, y + r * 0.8); ctx.lineTo(x - r * 0.8, y);
+      ctx.closePath(); ctx.stroke();
+      ctx.fillRect(x - 1, y - r * 0.35, 2, r * 0.5);
+      ctx.fillRect(x - 1, y + r * 0.3, 2, 2);
+      break;
+    case 'release':
+      ctx.beginPath();
+      ctx.moveTo(x, y - r * 0.8); ctx.lineTo(x + r * 0.7, y + r * 0.6); ctx.lineTo(x - r * 0.7, y + r * 0.6);
+      ctx.closePath(); ctx.fill();
+      break;
+    case 'ideas':
+      ctx.beginPath(); ctx.arc(x, y - r * 0.15, r * 0.45, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillRect(x - r * 0.25, y + r * 0.35, r * 0.5, r * 0.3);
+      break;
+    case 'discuss':
+      roundRect(x - r * 0.8, y - r * 0.6, r * 1.6, r * 1.1, r * 0.3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - r * 0.3, y + r * 0.5); ctx.lineTo(x - r * 0.5, y + r * 0.85); ctx.lineTo(x + r * 0.05, y + r * 0.5); ctx.stroke();
+      break;
+    case 'groups':
+      for (const [dx, dy] of [[-0.5, 0.2], [0.5, 0.2], [0, -0.5]]) {
+        ctx.beginPath(); ctx.arc(x + dx * r, y + dy * r, r * 0.3, 0, Math.PI * 2); ctx.stroke();
+      }
+      break;
+    case 'dir':
+      for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        ctx.strokeRect(x + dx * r * 0.7 - r * 0.3, y + dy * r * 0.7 - r * 0.3, r * 0.6, r * 0.6);
+      }
+      break;
+    case 'events': // lighthouse
+      ctx.beginPath();
+      ctx.moveTo(x - r * 0.4, y + r * 0.7); ctx.lineTo(x - r * 0.2, y - r * 0.5);
+      ctx.lineTo(x + r * 0.2, y - r * 0.5); ctx.lineTo(x + r * 0.4, y + r * 0.7);
+      ctx.closePath(); ctx.stroke();
+      ctx.fillRect(x - r * 0.6, y + r * 0.7, r * 1.2, 2);
+      break;
+    case 'news':
+      ctx.strokeRect(x - r * 0.7, y - r * 0.6, r * 1.4, r * 1.2);
+      for (const k of [-0.3, 0, 0.3]) {
+        ctx.beginPath(); ctx.moveTo(x - r * 0.4, y + k * r); ctx.lineTo(x + r * 0.4, y + k * r); ctx.stroke();
+      }
+      break;
+  }
+  ctx.restore();
+}
+
+function drawStation(st) {
+  const lit = !!state.lit[st.id];
+  const x = st.x, y = st.y, bodyH = 62;
+  ctx.fillStyle = lit ? '#1EAF9B' : '#152E7C';
+  ctx.strokeStyle = lit ? '#29DBBE' : '#FFFFFF';
+  ctx.lineWidth = 2;
+  roundRect(x - 13, y - bodyH, 26, bodyH, 6);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#EAF4FF';
+  ctx.fillRect(x - 18, y - 6, 36, 6);
+  // medallion with icon
+  ctx.beginPath();
+  ctx.arc(x, y - bodyH - 14, 18, 0, Math.PI * 2);
+  ctx.fillStyle = lit ? '#29DBBE' : '#FFFFFF';
+  ctx.fill();
+  ctx.strokeStyle = '#071351';
+  ctx.stroke();
+  drawIcon(st.kind, x, y - bodyH - 14, 11);
+  // lit check mark (shape, not colour alone)
+  if (lit) {
+    const cx = x + 16, cy = y - bodyH - 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#071351'; ctx.fill();
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(cx - 4, cy); ctx.lineTo(cx - 1, cy + 3); ctx.lineTo(cx + 4, cy - 3); ctx.stroke();
+  }
+  // label
+  ctx.font = '700 13px ' + getComputedStyle(document.body).fontFamily;
+  ctx.textAlign = 'center';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(7,19,81,0.9)';
+  ctx.strokeText(st.label, x, y - bodyH - 40);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(st.label, x, y - bodyH - 40);
+}
+
+function archPath(x, y, w, h) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + h);
+  ctx.lineTo(x, y + w / 2);
+  ctx.arc(x + w / 2, y + w / 2, w / 2, Math.PI, 0);
+  ctx.lineTo(x + w, y + h);
+  ctx.closePath();
+}
+
+function drawGate(t) {
+  const gx = L.gate.x, gy = L.gate.y, w = 36, h = 90;
+  const open = allRequiredLit();
+  ctx.save();
+  archPath(gx - w / 2, gy - h, w, h);
+  if (open) {
+    const gr = ctx.createLinearGradient(0, gy - h, 0, gy);
+    gr.addColorStop(0, '#92EAFF');
+    gr.addColorStop(1, '#1EAF9B');
+    ctx.fillStyle = gr;
+    ctx.fill();
+    ctx.shadowColor = 'rgba(41,219,190,0.9)';
+    ctx.shadowBlur = state.reducedMotion ? 6 : 12 + 5 * Math.sin(t * 3);
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = '#071351';
+    ctx.fill();
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillRect(gx - 5, gy - 40, 10, 9);
+  }
+  ctx.restore();
+}
+
+function drawSpark(x, y, i, t) {
+  const pulse = state.reducedMotion ? 0 : Math.sin(t * 4 + i) * 1.2;
+  const r = 7 + pulse;
+  ctx.beginPath();
+  ctx.moveTo(x, y - r);
+  ctx.lineTo(x + r * 0.7, y);
+  ctx.lineTo(x, y + r);
+  ctx.lineTo(x - r * 0.7, y);
+  ctx.closePath();
+  ctx.fillStyle = '#F3AB39';
+  ctx.fill();
+  ctx.strokeStyle = '#7EDEFC';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(x - 1, y - 1, 2, 2);
+}
+
+function drawPlayer() {
+  const p = player;
+  const swing = p.onGround && !state.reducedMotion ? Math.sin(p.anim) * 3 : 0;
+  ctx.save();
+  ctx.translate(p.x + PW / 2, p.y + PH / 2);
+  ctx.scale(p.face >= 0 ? 1 : -1, 1);
+  // backpack
+  ctx.fillStyle = '#29DBBE';
+  roundRect(-PW / 2 - 3, -PH / 2 + 9, 7, 13, 2);
+  ctx.fill();
+  // legs
+  ctx.fillStyle = '#071351';
+  ctx.fillRect(-6 + swing * 0.3, PH / 2 - 6, 5, 6);
+  ctx.fillRect(1 - swing * 0.3, PH / 2 - 6, 5, 6);
+  // body
+  ctx.fillStyle = '#357DE4';
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 1.5;
+  roundRect(-PW / 2 + 2, -PH / 2 + 13, PW - 4, 12, 4);
+  ctx.fill(); ctx.stroke();
+  // head (generic navigator helmet with visor)
+  ctx.beginPath();
+  ctx.arc(0, -PH / 2 + 7, 7, 0, Math.PI * 2);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fill();
+  ctx.strokeStyle = '#071351';
+  ctx.stroke();
+  ctx.fillStyle = '#071351';
+  roundRect(-1, -PH / 2 + 5, 7, 3, 1.5);
+  ctx.fill();
+  // compass dot
+  ctx.fillStyle = '#F3AB39';
+  ctx.beginPath();
+  ctx.arc(2, -PH / 2 + 19, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawParticles() {
+  for (const q of particles) {
+    ctx.globalAlpha = Math.max(0, q.life / q.max);
+    ctx.fillStyle = q.color;
+    ctx.fillRect(q.x - 2, q.y - 2, 4, 4);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function render(t) {
+  // Screen-space sky and stars
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const grd = ctx.createLinearGradient(0, 0, 0, cssH);
+  grd.addColorStop(0, '#071351');
+  grd.addColorStop(0.55, '#152E7C');
+  grd.addColorStop(1, L.accent);
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, cssW, cssH);
+  for (const s of STARS) {
+    let x = s.x * cssW - cam.x * S * 0.12;
+    x = ((x % cssW) + cssW) % cssW;
+    const a = state.reducedMotion ? s.a : s.a * (0.6 + 0.4 * Math.sin(t * 2 + s.p));
+    ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`;
+    ctx.fillRect(x, s.y * cssH, s.r, s.r);
+  }
+
+  // World space
+  ctx.setTransform(DPR * S, 0, 0, DPR * S, -cam.x * DPR * S, (-cam.y * S - touchPad()) * DPR);
+  drawDecor();
+  for (const r of solidsStatic) drawPlatform(r);
+  drawBridge();
+  for (const m of movers) drawMover(m);
+  L.checkpoints.forEach((c, k) => drawCheckpoint(c, state.cps[state.levelIdx][k]));
+  for (const st of L.stations) drawStation(st);
+  drawGate(t);
+  L.sparks.forEach((s, i) => { if (!state.sparks[state.levelIdx][i]) drawSpark(s[0], s[1], i, t); });
+  drawParticles();
+  drawPlayer();
+}
+
+/* ============================================================
+   Input
+   ============================================================ */
+const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump' };
+const GAME_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyA', 'KeyD', 'KeyW'];
+
+window.addEventListener('keydown', (e) => {
+  const playing = state.screen === 'play';
+  if (e.code === 'Escape') {
+    e.preventDefault();
+    if (state.dialog) closeDialog();
+    else if (playing) pauseGame();
+    else if (state.screen === 'pause') resumeGame();
+    else if (state.screen === 'howto') show(state.howtoFrom);
+    return;
+  }
+  if (!playing) return;
+  if (GAME_KEYS.includes(e.code) || e.code === 'KeyE' || e.code === 'Enter') e.preventDefault();
+  ensureAudio();
+  if (e.code === 'KeyE' || e.code === 'Enter') { if (!e.repeat) interact(); return; }
+  const act = KEYMAP[e.code];
+  if (!act) return;
+  if (act === 'jump') {
+    if (!input.jumpHeld) input.jumpPressed = true;
+    input.jumpHeld = true;
+  } else {
+    input[act] = true;
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  const act = KEYMAP[e.code];
+  if (act === 'jump') input.jumpHeld = false;
+  else if (act) input[act] = false;
+  if (state.screen === 'play' && GAME_KEYS.includes(e.code)) e.preventDefault();
+});
+
+window.addEventListener('blur', () => {
+  clearInput();
+  if (state.screen === 'play') pauseGame();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state.screen === 'play') pauseGame();
+});
+
+document.querySelectorAll('#touch [data-hold]').forEach((b) => {
+  const act = b.dataset.hold;
+  const down = (e) => {
+    e.preventDefault();
+    ensureAudio();
+    b.classList.add('active');
+    if (act === 'jump') {
+      if (!input.jumpHeld) input.jumpPressed = true;
+      input.jumpHeld = true;
+    } else {
+      input[act] = true;
+    }
+  };
+  const up = (e) => {
+    e.preventDefault();
+    b.classList.remove('active');
+    if (act === 'jump') input.jumpHeld = false;
+    else input[act] = false;
+  };
+  b.addEventListener('pointerdown', down);
+  ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture'].forEach(ev => b.addEventListener(ev, up));
+});
+
+$('t-interact').addEventListener('pointerdown', (e) => { e.preventDefault(); interact(); });
+$('prompt').addEventListener('click', () => { if ($('prompt').classList.contains('action')) interact(); });
+
+$('b-play').addEventListener('click', startGame);
+$('b-howto-title').addEventListener('click', () => openHowto('title'));
+$('howto-back').addEventListener('click', () => show(state.howtoFrom));
+$('btn-pause').addEventListener('click', () => { pauseGame(); });
+$('p-resume').addEventListener('click', resumeGame);
+$('p-checkpoint').addEventListener('click', returnToCheckpoint);
+$('p-howto').addEventListener('click', () => openHowto('pause'));
+$('p-skip').addEventListener('click', finish);
+$('p-quit').addEventListener('click', () => show('title'));
+$('ch-next').addEventListener('click', nextLevel);
+$('end-replay').addEventListener('click', startGame);
+$('end-title').addEventListener('click', () => show('title'));
+$('dlg-close').addEventListener('click', closeDialog);
+document.querySelectorAll('.toggle-sound').forEach(b => b.addEventListener('click', toggleSound));
+document.querySelectorAll('.toggle-motion').forEach(b => b.addEventListener('click', toggleMotion));
+canvas.addEventListener('pointerdown', () => canvas.focus({ preventScroll: true }));
+
+if (motionQuery && motionQuery.addEventListener) {
+  motionQuery.addEventListener('change', (e) => { state.reducedMotion = e.matches; updateToggleLabels(); });
+}
+if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
+window.addEventListener('touchstart', () => document.body.classList.add('touch'), { once: true, passive: true });
+
+/* ============================================================
+   Layout and loop
+   ============================================================ */
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  cssW = window.innerWidth;
+  cssH = window.innerHeight;
+  canvas.width = Math.round(cssW * DPR);
+  canvas.height = Math.round(cssH * DPR);
+  // Portrait screens zoom closer so the player stays readable on a phone
+  const baseW = cssW < cssH ? 400 : BASE_W;
+  S = Math.min(cssW / baseW, cssH / BASE_H);
+  camSnap = true;
+}
+window.addEventListener('resize', resize);
+
+let lastT = performance.now();
+function frame(now) {
+  const dt = Math.min(0.033, Math.max(0, (now - lastT) / 1000));
+  lastT = now;
+  state.time += dt;
+  if (state.screen === 'play') {
+    if (!state.dialog) step(dt);
+  } else {
+    // Title and menus: the world stays alive behind the panels
+    updateMovers(dt);
+    updateReveal(dt);
+  }
+  updateParticles(dt);
+  updateCamera(dt);
+  updatePrompt();
+  render(state.time);
+  requestAnimationFrame(frame);
+}
+
+// Read-only snapshot for testing and debugging
+window.communityQuest = {
+  snapshot() {
+    return {
+      screen: state.screen, level: state.levelIdx + 1, levelName: L.name,
+      player: { x: Math.round(player.x), y: Math.round(player.y), onGround: player.onGround },
+      tokens: state.tokens.slice(), lit: Object.keys(state.lit).filter(k => state.lit[k]),
+      sparks: state.sparks.flat().filter(Boolean).length, dialog: state.dialog ? state.dialog.name : null
+    };
+  }
+};
+
+/* ============================================================
+   Boot
+   ============================================================ */
+resize();
+loadLevel(0, true);
+refreshHud();
+show('title');
+requestAnimationFrame((t) => { lastT = t; frame(t); });
+})();
+</script>
+</body>
+</html>
